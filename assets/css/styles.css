@@ -96,3 +96,50 @@
 .dot.active {
     opacity: 1; /* Active dot */
 }
+
+/* Services tiles — crop every thumbnail to the same ratio Realisations
+   uses (its source images are pre-cropped to 1048x483 / ~2.17:1; the
+   service screenshots aren't, so without this the tile row looks
+   uneven). object-fit keeps each image centred instead of stretched. */
+#Services ~ .container .highlight .image.featured {
+    aspect-ratio: 1048 / 483;
+    overflow: hidden;
+}
+
+#Services ~ .container .highlight .image.featured img {
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Tiles have uneven description lengths, which otherwise leaves the
+   Explore/Request link at a different height per card. Row already
+   stretches columns to equal height (see .row { align-items: stretch }
+   in main.css) — turn each tile into a flex column and pin its last
+   paragraph (the link line) to the bottom so links line up. */
+#Services ~ .container .col-4 {
+    display: flex;
+}
+
+#Services ~ .container .highlight {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+#Services ~ .container .highlight > p:last-child {
+    margin-top: auto;
+}
+
+/* Placeholder tile (no screenshot yet) — icon on a flat tint instead
+   of a photo, same footprint as the other tiles. */
+#Services ~ .container .highlight .image.featured.svc-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f4f4f4;
+}
+
+#Services ~ .container .highlight .image.featured.svc-placeholder i {
+    font-size: 2.5em;
+    color: #c7c9cd;
+}
