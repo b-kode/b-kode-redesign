@@ -49,10 +49,10 @@ async function initSolweigDemo(el){
     <p class="solweig-blurb" data-blurb></p>
     <div class="solweig-figure">
       <img data-img alt="" />
-    </div>
-    <div class="solweig-stats">
-      <div class="stat"><span class="lbl">Climate slice</span><span class="val" data-slice-val>—</span></div>
-      <div class="stat"><span class="lbl">UTCI range</span><span class="val warm" data-range>—</span></div>
+      <div class="solweig-stats">
+        <div class="stat"><span class="lbl">Climate slice</span><span class="val" data-slice-val>—</span></div>
+        <div class="stat"><span class="lbl">UTCI range</span><span class="val warm" data-range>—</span></div>
+      </div>
     </div>`;
 
   const $city  = el.querySelector('#swCity');

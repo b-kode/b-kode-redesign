@@ -22,12 +22,19 @@
   background: #f17773;
 }
 
+/* The raster PNGs are irregularly-shaped cutouts (RGBA, cropped to
+   the neighbourhood outline, not a rectangle) — on a flat light-grey
+   field that reads as an unfinished/undefined edge. A dark basemap-
+   like background gives the cutout a deliberate "map" context (the
+   warm UTCI colours also pop harder against dark), and the stats
+   move to a glass overlay card on top of the image, closer to the
+   mockup's dash-glass treatment, instead of a separate strip below. */
 .solweig-figure{
   position: relative;
   border: 1px solid #eee;
   border-radius: 0.35em;
   overflow: hidden;
-  background: #f4f4f4;
+  background: #2f333b;
 }
 .solweig-figure img{
   display: block;
@@ -35,30 +42,35 @@
   height: auto;
   max-height: 520px;
   object-fit: contain;
-  background: #f4f4f4;
+  background: #2f333b;
 }
 
 .solweig-stats{
+  position: absolute;
+  top: 1em;
+  right: 1em;
   display: flex;
   flex-wrap: wrap;
-  gap: 1.5em;
-  padding: 0.9em 1.25em;
-  border-top: 1px solid #eee;
-  background: #fff;
+  gap: 1.25em;
+  padding: 0.85em 1.15em;
+  border-radius: 0.35em;
+  background: rgba(28, 31, 38, 0.85);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 .solweig-stats .stat .lbl{
   display: block;
-  font-size: 0.7em;
+  font-size: 0.65em;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.15em;
-  color: #919499;
+  color: rgba(255,255,255,0.55);
 }
 .solweig-stats .stat .val{
-  font-size: 1em;
-  color: #484d55;
+  font-size: 0.95em;
+  color: #fff;
 }
-.solweig-stats .stat .val.warm{ color: #f17773; }
+.solweig-stats .stat .val.warm{ color: #f98780; }
 
 .solweig-blurb{
   padding: 0 0.1em 0.75em;
