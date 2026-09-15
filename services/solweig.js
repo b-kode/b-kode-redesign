@@ -13,7 +13,7 @@ async function loadJSON(url){
 }
 
 function field(label, id, options, sel){
-  return `<div class="epw-field">
+  return `<div class="svc-field">
     <label for="${id}">${label}</label>
     <select id="${id}">${options.map(o =>
       `<option value="${o.v}"${o.v === sel ? ' selected' : ''}>${o.t}</option>`).join('')}</select>
@@ -21,7 +21,7 @@ function field(label, id, options, sel){
 }
 
 function demoError(el){
-  el.innerHTML = `<p class="epw-loading">Demo data needs a local server —
+  el.innerHTML = `<p class="svc-demo-loading">Demo data needs a local server —
     run <code>python -m http.server</code> in the repo root and open it over
     <code>http://localhost:8000</code> (opening the file directly won't fetch the JSON).</p>`;
 }
@@ -35,7 +35,7 @@ async function initSolweigDemo(el){
   const firstCity = idx.cities[0];
 
   el.innerHTML = `
-    <div class="epw-demo-controls">
+    <div class="svc-demo-controls">
       ${field('City', 'swCity', cityOpts, firstCity.id)}
       ${field('Neighbourhood', 'swHood',
         firstCity.neighbourhoods.map(n => ({ v: n.id, t: n.label })),

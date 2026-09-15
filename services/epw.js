@@ -14,7 +14,7 @@ async function loadJSON(url){
 }
 
 function field(label, id, options, sel){
-  return `<div class="epw-field">
+  return `<div class="svc-field">
     <label for="${id}">${label}</label>
     <select id="${id}">${options.map(o =>
       `<option value="${o.v}"${o.v === sel ? ' selected' : ''}>${o.t}</option>`).join('')}</select>
@@ -71,7 +71,7 @@ function lineChart(series, opt){
      </g>`).join('');
 
   return `
-    <div class="epw-legend"><svg viewBox="0 0 ${W} 16" width="100%" height="16">${legend}</svg></div>
+    <div class="svc-legend"><svg viewBox="0 0 ${W} 16" width="100%" height="16">${legend}</svg></div>
     <svg viewBox="0 0 ${W} ${H}" width="100%" preserveAspectRatio="xMidYMid meet" role="img"
          aria-label="${opt.aria || 'chart'}">
       ${yGrid}${areas}${lines}${xLabels}
@@ -81,7 +81,7 @@ function lineChart(series, opt){
 }
 
 function demoError(el){
-  el.innerHTML = `<p class="epw-loading">Demo data needs a local server —
+  el.innerHTML = `<p class="svc-demo-loading">Demo data needs a local server —
     run <code>python -m http.server</code> in the repo root and open it over
     <code>http://localhost:8000</code> (opening the file directly won't fetch the JSON).</p>`;
 }
@@ -95,18 +95,18 @@ async function initEpwDemo(el){
   const cityOpts = data.cities.map(c => ({ v: c.id, t: c.label }));
 
   el.innerHTML = `
-    <div class="epw-demo-controls">
+    <div class="svc-demo-controls">
       ${field('City', 'epwCity', cityOpts, data.cities[0].id)}
       ${field('EPW type', 'epwType', [{v:'TMY',t:'TMY — Typical Meteorological Year'},{v:'DSY',t:'DSY — Design Summer Year'}], 'TMY')}
       ${field('Variable', 'epwVar', varOpts, 'tdb')}
-      <div class="epw-field">
+      <div class="svc-field">
         <label for="epwFut">Future scenario</label>
         <select id="epwFut"></select>
       </div>
     </div>
-    <div class="epw-demo-figure">
+    <div class="svc-demo-figure">
       <div data-fig></div>
-      <div class="epw-demo-caption" data-cap></div>
+      <div class="svc-demo-caption" data-cap></div>
     </div>`;
 
   const $city = el.querySelector('#epwCity');
@@ -135,7 +135,7 @@ async function initEpwDemo(el){
     const vn = $var.value;
     const unit = data.vars[vn].unit;
     if (!yt || !yt.historical || !yt.historical.monthly[vn]) {
-      $fig.innerHTML = `<p class="epw-loading">No ${$type.value} profile for ${city.label}.</p>`;
+      $fig.innerHTML = `<p class="svc-demo-loading">No ${$type.value} profile for ${city.label}.</p>`;
       $cap.textContent = '';
       return;
     }

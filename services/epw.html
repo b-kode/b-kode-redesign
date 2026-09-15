@@ -59,92 +59,78 @@
 				</section>
 
 			<!-- Service detail -->
-				<div id="main" class="wrapper style3">
-					<div class="title">Services</div>
+				<div id="main" class="wrapper style2">
 					<div class="container">
+						<div class="svc-page">
 
-						<center>
-							<p class="svc-back-row"><a class="svc-back" href="../index.html#Services">&larr; Back to services</a></p>
-							<p class="svc-kicker">Weather files</p>
-							<h2 class="svc-title">Global EPW Scenario Generator</h2>
-							<p>A global weather-file generator that replaces static, historical airport data with
-							site-specific EnergyPlus Weather (EPW) files tailored to exact coordinates and future
-							(extreme) climate scenarios.</p>
-						</center>
+							<a class="svc-back" href="../index.html#Services">&larr; Back to services</a>
 
-						</br>
-
-						<div class="row">
-							<div class="col-12">
-								<span class="image featured epw-hero-frame">
-									<img class="epw-hero" src="../images/services/epw.png"
-										alt="EPW dry-bulb temperature heatmap by hour of day and month" />
-								</span>
-								<p class="svc-caption">Picture: EPW file heatmap (hourly dry-bulb by hour of day and month).</p>
+							<div class="svc-hero">
+								<img class="svc-hero-img" src="../images/services/epw.png"
+									alt="EPW dry-bulb temperature heatmap by hour of day and month" />
+								<div class="svc-hero-text">
+									<span class="svc-kicker">Weather files</span>
+									<h1>Global EPW Scenario Generator</h1>
+								</div>
 							</div>
+							<p class="svc-hero-caption">Picture: EPW file heatmap (hourly dry-bulb by hour of day and month).</p>
+
+							<div class="svc-intro">
+								<p>A global weather-file generator that replaces static, historical airport data with
+								site-specific EnergyPlus Weather (EPW) files tailored to exact coordinates and future
+								(extreme) climate scenarios.</p>
+							</div>
+
+							<div class="svc-block">
+								<h2>Strengths &amp; innovation</h2>
+								<ul class="svc-strengths">
+									<li>
+										<span class="pico"><i class="fas fa-fire"></i></span>
+										<span><strong>Extreme events</strong>Simulates specific extreme events such as heatwaves — not just simple "mean-shift" morphing.</span>
+									</li>
+									<li>
+										<span class="pico"><i class="fas fa-globe"></i></span>
+										<span><strong>Global flexibility</strong>Generates data for any coordinate on Earth, independent of proximity to a physical weather station.</span>
+									</li>
+									<li>
+										<span class="pico"><i class="fas fa-sliders-h"></i></span>
+										<span><strong>Scenario flexibility</strong>EPW files for every future (SSP) scenario and time window, compliant with the study scenario.</span>
+									</li>
+									<li>
+										<span class="pico"><i class="fas fa-layer-group"></i></span>
+										<span><strong>Best data available</strong>Combines ERA5-Land reanalysis, local WMO weather stations and CMIP6 projections from multiple GCMs.</span>
+									</li>
+								</ul>
+							</div>
+
+							<div class="svc-block">
+								<h2>Quote</h2>
+								<blockquote class="svc-quote">
+									&ldquo;Designing for a historical TMY means designing for a climate that no longer exists —
+									future and urban weather files move the design point to the conditions the building will actually meet.&rdquo;
+									<footer>Why future / urban weather files matter</footer>
+								</blockquote>
+							</div>
+
+							<div class="svc-block">
+								<h2>Demo</h2>
+								<p>Real monthly climate profile for each demo city — the shaded band is the
+								   P10–P90 spread, the line the median. Historical (1991–2020) vs a future
+								   CMIP6 file for the same coordinate.</p>
+								<div id="epwDemo">
+									<p class="svc-demo-loading">Loading demo data…</p>
+								</div>
+							</div>
+
+							<div class="svc-block">
+								<h2>Free request</h2>
+								<p class="svc-request">
+									Free request — one scenario only (SSP2-4.5, served from an external hard drive).
+									<a href="mailto:jonas@b-kode.be?subject=Request%20an%20EPW%20file">Request an EPW file &rarr;</a>
+								</p>
+							</div>
+
 						</div>
-
-						</br></br>
-
-						<div class="feature-list">
-						<div class="row">
-							<div class="col-6 col-12-medium">
-								<section>
-									<h3 class="icon solid fa-fire">Extreme events</h3>
-									<p>Simulates specific extreme events such as heatwaves — not just simple "mean-shift" morphing.</p>
-								</section>
-							</div>
-							<div class="col-6 col-12-medium">
-								<section>
-									<h3 class="icon solid fa-globe">Global flexibility</h3>
-									<p>Generates data for any coordinate on Earth, independent of proximity to a physical weather station.</p>
-								</section>
-							</div>
-							<div class="col-6 col-12-medium">
-								<section>
-									<h3 class="icon solid fa-sliders-h">Scenario flexibility</h3>
-									<p>EPW files for every future (SSP) scenario and time window, compliant with the study scenario.</p>
-								</section>
-							</div>
-							<div class="col-6 col-12-medium">
-								<section>
-									<h3 class="icon solid fa-layer-group">Best data available</h3>
-									<p>Combines ERA5-Land reanalysis, local WMO weather stations and CMIP6 projections from multiple GCMs.</p>
-								</section>
-							</div>
-						</div>
-						</div>
-
-						</br>
-
-						<center>
-							<blockquote class="svc-quote">
-								&ldquo;Designing for a historical TMY means designing for a climate that no longer exists —
-								future and urban weather files move the design point to the conditions the building will actually meet.&rdquo;
-							</blockquote>
-						</center>
-
-						</br></br>
-
-						<h2 class="svc-h2">Demo</h2>
-						<p>Real monthly climate profile for each demo city — the shaded band is the
-						   P10–P90 spread, the line the median. Historical (1991–2020) vs a future
-						   CMIP6 file for the same coordinate.</p>
-
-						<div id="epwDemo" class="epw-demo">
-							<p class="epw-loading">Loading demo data…</p>
-						</div>
-
-						</br></br>
-
-						<center>
-							<p class="svc-request-note">
-								Free request — one scenario only (SSP2-4.5, served from an external hard drive).
-								<br>
-								<a href="mailto:jonas@b-kode.be?subject=Request%20an%20EPW%20file">Request an EPW file &rarr;</a>
-							</p>
-						</center>
-
 					</div>
 				</div>
 
