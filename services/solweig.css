@@ -1,0 +1,67 @@
+/* SOLWEIG demo — city/neighbourhood/slice toggle over a static UTCI raster.
+   No map library: an <img> swap, kept deliberately light. */
+
+.solweig-seg{
+  display: flex;
+  gap: 0.5em;
+  margin: 0 0 1.25em;
+}
+.solweig-seg button{
+  font-family: inherit;
+  font-size: 0.85em;
+  font-weight: 700;
+  color: #717479;
+  background: #eee;
+  border: 0;
+  border-radius: 0.35em;
+  padding: 0.6em 1.1em;
+  cursor: pointer;
+}
+.solweig-seg button.is-active{
+  color: #fff;
+  background: #f17773;
+}
+
+.solweig-figure{
+  position: relative;
+  border: 1px solid #eee;
+  border-radius: 0.35em;
+  overflow: hidden;
+  background: #f4f4f4;
+}
+.solweig-figure img{
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 520px;
+  object-fit: contain;
+  background: #f4f4f4;
+}
+
+.solweig-stats{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5em;
+  padding: 0.9em 1.25em;
+  border-top: 1px solid #eee;
+  background: #fff;
+}
+.solweig-stats .stat .lbl{
+  display: block;
+  font-size: 0.7em;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: #919499;
+}
+.solweig-stats .stat .val{
+  font-size: 1em;
+  color: #484d55;
+}
+.solweig-stats .stat .val.warm{ color: #f17773; }
+
+.solweig-blurb{
+  padding: 0 0.1em 0.75em;
+  font-size: 0.9em;
+  color: #717479;
+}
