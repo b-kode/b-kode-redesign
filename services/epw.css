@@ -25,12 +25,23 @@
   margin-bottom: 0.5em;
 }
 
+/* Hero picture — wrapped in .image.featured so wrapper.style3 gives it
+   the same white photo-frame border as every Realisations/Services
+   tile; this just centres+caps the framed box and crops the image. */
+.epw-hero-frame{
+  display: block;
+  max-width: 40em;
+  margin: 0 auto;
+  /* The white photo-frame border from wrapper.style3 barely reads
+     against the section's own off-white (#f3f3f3) background at this
+     larger hero size — add a soft shadow so the frame still pops. */
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
 .epw-hero{
   display: block;
-  max-width: 100%;
+  width: 100%;
   max-height: 420px;
-  margin: 0 auto;
-  border-radius: 0.35em;
+  object-fit: cover;
   background: #f4f4f4;
 }
 .svc-caption{
