@@ -1,0 +1,41 @@
+/* Land cover demo — neighbourhood picker over a static 2 m
+   classification raster, plus a class-colour legend. No map
+   library, same dark-basemap treatment as the SOLWEIG/UHI demos. */
+
+.lc-figure{
+  position: relative;
+  border: 1px solid var(--rule, #ddd);
+  border-radius: 0.35em;
+  overflow: hidden;
+  background: #2f333b;
+}
+.lc-figure img{
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 520px;
+  object-fit: cover;
+  background: #2f333b;
+}
+
+.lc-legend{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5em 1.25em;
+  padding: 1em 1.25em;
+  border-top: 1px solid var(--rule, #ddd);
+  background: #fff;
+}
+.lc-legend .swatch{
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  font-size: 0.8em;
+  color: var(--heading, #484d55);
+}
+.lc-legend .swatch .dot{
+  width: 0.9em;
+  height: 0.9em;
+  border-radius: 0.2em;
+  flex: 0 0 auto;
+}

@@ -1,0 +1,93 @@
+{
+ "full": {
+  "file": "lc_preview.png",
+  "bounds": [
+   4.83504300272829,
+   52.33750567612052,
+   4.9498952128869895,
+   52.40773173566866
+  ]
+ },
+ "neighbourhoods": [
+  {
+   "id": "1",
+   "label": "Museumkwartier & Vondelpark",
+   "file": "lc_hood_1.png",
+   "bounds": [
+    4.876815309661598,
+    52.354885369931864,
+    4.890276865450418,
+    52.36310966508675
+   ],
+   "resolution_m": 2
+  },
+  {
+   "id": "2",
+   "label": "Amsterdam-Noord (NDSM)",
+   "file": "lc_hood_2.png",
+   "bounds": [
+    4.903703174543102,
+    52.381865782436414,
+    4.916727012007961,
+    52.38985221264562
+   ],
+   "resolution_m": 2
+  },
+  {
+   "id": "3",
+   "label": "Jordaan",
+   "file": "lc_hood_3.png",
+   "bounds": [
+    4.866376390256957,
+    52.37199602509678,
+    4.880746098085455,
+    52.38079035562441
+   ],
+   "resolution_m": 2
+  },
+  {
+   "id": "4",
+   "label": "Oosterdok & Plantage",
+   "file": "lc_hood_4.png",
+   "bounds": [
+    4.902575756364615,
+    52.36724893329174,
+    4.916528633984608,
+    52.37578910891348
+   ],
+   "resolution_m": 2
+  }
+ ],
+ "classes": [
+  {
+   "value": 2,
+   "label": "Roof / building",
+   "color": "#1e1818"
+  },
+  {
+   "value": 1,
+   "label": "Paved / ground",
+   "color": "#7d7563"
+  },
+  {
+   "value": 6,
+   "label": "Bare soil",
+   "color": "#d49144"
+  },
+  {
+   "value": 4,
+   "label": "Tree canopy",
+   "color": "#2b7520"
+  },
+  {
+   "value": 5,
+   "label": "Low vegetation",
+   "color": "#85e16e"
+  },
+  {
+   "value": 7,
+   "label": "Water",
+   "color": "#112cb6"
+  }
+ ]
+}
