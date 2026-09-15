@@ -1,0 +1,124 @@
+/* ============================================================
+   Service detail pages — shared styles (EPW, and future services).
+   Colours match the compiled site palette in assets/css/main.css
+   (heading #484d55, text #717479/#919499, accent #f17773/#e97770).
+   ============================================================ */
+
+.svc-back{
+  display: inline-block;
+  font-size: 0.5em;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
+  color: #919499;
+  margin-right: 1em;
+  vertical-align: middle;
+}
+.svc-back:hover{ color: #f17773; }
+
+.svc-kicker{
+  font-size: 0.75em;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: #919499;
+  margin-bottom: 0.5em;
+}
+
+.epw-hero{
+  display: block;
+  max-width: 100%;
+  max-height: 420px;
+  margin: 0 auto;
+  border-radius: 0.35em;
+  background: #f4f4f4;
+}
+.svc-caption{
+  text-align: center;
+  font-size: 0.85em;
+  color: #919499;
+  margin-top: 0.75em;
+}
+
+.svc-quote{
+  font-size: 1.3em;
+  font-style: italic;
+  color: #484d55;
+  max-width: 42em;
+  margin: 0 auto;
+  border: none;
+  padding: 0;
+}
+
+.svc-h2{
+  font-size: 1.5em;
+  color: #484d55;
+  margin-bottom: 0.25em;
+}
+
+.svc-request-note{
+  font-size: 0.9em;
+  color: #919499;
+}
+.svc-request-note a{ color: #f17773; }
+
+/* ---- demo block (EPW chart) ---- */
+.epw-demo-controls{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25em;
+  margin: 1.5em 0;
+}
+.epw-field{ display: flex; flex-direction: column; gap: 0.35em; }
+.epw-field label{
+  font-size: 0.7em;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: #919499;
+}
+.epw-field select{
+  font-family: inherit;
+  font-size: 0.95em;
+  color: #484d55;
+  background: #eee;
+  border: 0;
+  border-radius: 0.35em;
+  padding: 0.75em 1em;
+  min-width: 12em;
+}
+.epw-field select:focus{ background: #f8f8f8; outline: 2px solid #f17773; }
+
+.epw-demo-figure{
+  border: 1px solid #eee;
+  border-radius: 0.35em;
+  overflow: hidden;
+  background: #fff;
+}
+.epw-demo-figure svg{ width: 100%; height: auto; display: block; }
+.epw-demo-figure > [data-fig]{ padding: 1em 0.75em 0.25em; }
+.epw-demo-caption{
+  padding: 0.75em 1.25em;
+  font-size: 0.85em;
+  color: #717479;
+  border-top: 1px solid #eee;
+  line-height: 1.5em;
+}
+.epw-demo-caption strong{ color: #484d55; }
+.epw-legend{ padding: 0.75em 0.75em 0; }
+
+.epw-loading{
+  color: #717479;
+  font-size: 0.9em;
+  padding: 1.5em;
+  background: #f4f4f4;
+  border-radius: 0.35em;
+  margin: 0;
+}
+.epw-loading code{
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 0.2em;
+  padding: 0.05em 0.4em;
+  font-size: 0.9em;
+}

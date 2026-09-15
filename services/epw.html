@@ -1,0 +1,201 @@
+<!DOCTYPE HTML>
+<!--
+	Escape Velocity by HTML5 UP
+	html5up.net | @ajlkn
+	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+-->
+<html>
+
+	<head>
+		<title>B-Kode — Global EPW Scenario Generator</title>
+		<meta name="robots" content="noindex, nofollow" />
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<link rel="stylesheet" href="../assets/css/main.css" />
+		<link rel="stylesheet" href="../assets/css/styles.css">
+		<link rel="stylesheet" href="epw.css">
+		<link rel="icon" href="../images/kode_favicon.png">
+
+		<!-- Global site tag (gtag.js) - Google Analytics -->
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-LMPC70865G"></script>
+		<script>
+		  window.dataLayer = window.dataLayer || [];
+		  function gtag(){dataLayer.push(arguments);}
+		  gtag('js', new Date());
+
+		  gtag('config', 'G-LMPC70865G');
+		</script>
+
+	</head>
+	<body class="no-sidebar is-preload">
+
+		<div id="page-wrapper">
+
+			<!-- Header -->
+				<section id="header" class="wrapper">
+
+					<!-- Logo -->
+						<div id="logo">
+						<div>
+							<img class="thumbnail" src="../images/KODE_logo_web.png" alt="" />
+						</div></br>
+							<h1><a href="../index.html">B-Kode</a></h1>
+							<p>Building blocks for a better future</p>
+						</div>
+
+					<!-- Nav -->
+						<nav id="nav">
+							<ul>
+								<li><a href="../index.html">Home</a></li>
+								<li><a href="../index.html#About">About</a></li>
+								<li><a href="../index.html#Realisations">Realisations</a></li>
+								<li><a href="../index.html#Services" class="current">Services</a></li>
+								<li><a href="../index.html#Whoarewe">Who are we?</a></li>
+								<li><a href="../index.html#Career">Career</a></li>
+								<li><a href="../index.html#Contact">Contact</a></li>
+							</ul>
+						</nav>
+
+				</section>
+
+			<!-- Service detail -->
+				<div id="main" class="wrapper style2">
+					<div class="title">
+						<a class="svc-back" href="../index.html#Services">&larr; Services</a>
+						Global EPW Scenario Generator
+					</div>
+					<div class="container">
+
+						<center>
+							<p class="svc-kicker">Weather files</p>
+							<p>A global weather-file generator that replaces static, historical airport data with
+							site-specific EnergyPlus Weather (EPW) files tailored to exact coordinates and future
+							(extreme) climate scenarios.</p>
+						</center>
+
+						</br>
+
+						<div class="row">
+							<div class="col-12">
+								<img class="epw-hero" src="../images/services/epw.png"
+									alt="EPW dry-bulb temperature heatmap by hour of day and month" />
+								<p class="svc-caption">Picture: EPW file heatmap (hourly dry-bulb by hour of day and month).</p>
+							</div>
+						</div>
+
+						</br></br>
+
+						<div class="row">
+							<div class="col-6 col-12-medium">
+								<section>
+									<h3 class="icon solid fa-fire">Extreme events</h3>
+									<p>Simulates specific extreme events such as heatwaves — not just simple "mean-shift" morphing.</p>
+								</section>
+							</div>
+							<div class="col-6 col-12-medium">
+								<section>
+									<h3 class="icon solid fa-earth-americas">Global flexibility</h3>
+									<p>Generates data for any coordinate on Earth, independent of proximity to a physical weather station.</p>
+								</section>
+							</div>
+							<div class="col-6 col-12-medium">
+								<section>
+									<h3 class="icon solid fa-sliders">Scenario flexibility</h3>
+									<p>EPW files for every future (SSP) scenario and time window, compliant with the study scenario.</p>
+								</section>
+							</div>
+							<div class="col-6 col-12-medium">
+								<section>
+									<h3 class="icon solid fa-layer-group">Best data available</h3>
+									<p>Combines ERA5-Land reanalysis, local WMO weather stations and CMIP6 projections from multiple GCMs.</p>
+								</section>
+							</div>
+						</div>
+
+						</br>
+
+						<center>
+							<blockquote class="svc-quote">
+								&ldquo;Designing for a historical TMY means designing for a climate that no longer exists —
+								future and urban weather files move the design point to the conditions the building will actually meet.&rdquo;
+							</blockquote>
+						</center>
+
+						</br></br>
+
+						<h2 class="svc-h2">Demo</h2>
+						<p>Real monthly climate profile for each demo city — the shaded band is the
+						   P10–P90 spread, the line the median. Historical (1991–2020) vs a future
+						   CMIP6 file for the same coordinate.</p>
+
+						<div id="epwDemo" class="epw-demo">
+							<p class="epw-loading">Loading demo data…</p>
+						</div>
+
+						</br></br>
+
+						<center>
+							<p class="svc-request-note">
+								Free request — one scenario only (SSP2-4.5, served from an external hard drive).
+								<br>
+								<a href="mailto:jonas@b-kode.be?subject=Request%20an%20EPW%20file">Request an EPW file &rarr;</a>
+							</p>
+						</center>
+
+					</div>
+				</div>
+
+			<!-- Contact -->
+				<section id="footer" class="wrapper">
+					<div class="title" id="Contact">Contact</div>
+					<div class="container">
+								<section class="feature-list small">
+										<div class="row aln-center">
+
+											<div class="col-4 col-12-small">
+												<section class="text-center">
+													<h3 class="icon solid fa-home ">Mailing Address</h3>
+													<p>
+														B-Kode VOF<br />
+														Eliane Vogel-Polskypad 2 / 403<br />
+														9000 Ghent (Belgium)
+													</p>
+												</section>
+											</div>
+
+											<div class="col-4 col-12-small">
+												<section class="text-center">
+													<h3 class="icon solid fa-comment">Email / Social</h3>
+													<p>
+														<a href="mailto:matthias@b-kode.be">matthias@b-kode.be</a><br />
+														<a href="http://www.linkedin.com/company/kode-be/">LinkedIn</a> |
+														<a href="https://bsky.app/profile/b-kode.bsky.social">bsky.social</a> <br />
+													</p>
+												</section>
+											</div>
+										</div>
+									</section>
+
+
+						<div id="copyright">
+							<ul>
+								<li>&copy; B-Kode VOF 2020.</li><li>Design: Matthias Demuzere (based on <a href="http://html5up.net">HTML5 UP</a>)</li>
+							</ul>
+						</div>
+					</div>
+				</section>
+
+  </div>
+
+		<!-- Scripts -->
+		<script src="../assets/js/jquery.min.js"></script>
+		<script src="../assets/js/jquery.dropotron.min.js"></script>
+		<script src="../assets/js/browser.min.js"></script>
+		<script src="../assets/js/breakpoints.min.js"></script>
+		<script src="../assets/js/util.js"></script>
+		<script src="../assets/js/main.js"></script>
+		<script src="https://kit.fontawesome.com/bdcf1cb699.js" crossorigin="anonymous"></script>
+		<script src="epw.js"></script>
+
+	</body>
+</html>
