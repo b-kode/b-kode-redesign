@@ -1,0 +1,92 @@
+/* Access to Green & Blue demo — no map library: pick a building from
+   the real scored dataset (2,700+ buildings, buildings.geojson) and
+   show its 5-rule pentagon radar next to the total score, compared
+   against the city average. */
+
+.access-toolbar{
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1em 1.5em;
+  margin-bottom: 1.5em;
+}
+.access-toolbar button{
+  font-family: inherit;
+  font-size: 0.85em;
+  font-weight: 700;
+  color: #fff;
+  background: var(--dark, #2f333b);
+  border: 0;
+  border-radius: 0.35em;
+  padding: 0.75em 1.2em;
+  cursor: pointer;
+}
+.access-toolbar button:hover{ background: #3d4249; }
+
+.access-card{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2em;
+  border: 1px solid var(--rule, #ddd);
+  border-radius: 0.35em;
+  padding: 1.75em;
+  background: #fff;
+}
+@media (max-width: 640px){
+  .access-card{ grid-template-columns: 1fr; }
+}
+
+.access-radar{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.access-radar svg{ width: 100%; max-width: 280px; height: auto; }
+
+.access-score{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.access-score .total-lbl{
+  font-size: 0.7em;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--text, #919499);
+  margin-bottom: 0.25em;
+}
+.access-score .total-val{
+  font-size: 2.5em;
+  font-weight: 700;
+  color: var(--heading, #484d55);
+  line-height: 1;
+  margin-bottom: 0.15em;
+}
+.access-score .total-of{
+  font-size: 0.9em;
+  color: var(--text, #919499);
+  margin-bottom: 1.25em;
+}
+.access-score .rule-list{
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 0.85em;
+}
+.access-score .rule-list li{
+  display: flex;
+  justify-content: space-between;
+  padding: 0.4em 0;
+  border-top: 1px solid var(--grey-2, #eee);
+  color: var(--heading, #484d55);
+}
+.access-score .rule-list li:first-child{ border-top: 0; }
+.access-score .rule-list .rule-val{ color: var(--accent, #e97770); font-weight: 700; }
+
+.access-avg-note{
+  margin-top: 1.25em;
+  font-size: 0.85em;
+  color: var(--text, #919499);
+}
+.access-avg-note strong{ color: var(--heading, #484d55); }
