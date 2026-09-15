@@ -25,6 +25,15 @@
   margin: 0 auto;
 }
 
+/* Hero is deliberately NOT capped to .svc-page's reading width — it
+   spans the full .container like the site's own banner sections do,
+   so it reads as a real title banner rather than a small inset
+   picture. */
+.svc-hero-wrap{
+  max-width: 70em;
+  margin: 0 auto;
+}
+
 .svc-back{
   display: inline-flex;
   align-items: center;
@@ -34,7 +43,8 @@
   text-transform: uppercase;
   letter-spacing: 0.2em;
   color: var(--link);
-  margin-bottom: 2em;
+  margin-bottom: 1.5em;
+  text-align: left;
 }
 .svc-back:hover{ color: var(--accent); text-decoration: none; }
 
@@ -43,7 +53,7 @@
 .svc-hero{
   position: relative;
   margin: 0 0 1em;
-  height: 260px;
+  height: 420px;
   border-radius: 0.35em;
   overflow: hidden;
   background: var(--dark);
@@ -72,21 +82,21 @@
   position: absolute;
   left: 0; right: 0; bottom: 0;
   z-index: 1;
-  padding: 1.75em 2em 1.5em;
+  padding: 2.5em 2.5em 2em;
   color: #fff;
 }
 .svc-kicker{
   display: block;
   text-transform: uppercase;
   letter-spacing: 0.25em;
-  font-size: 0.7em;
+  font-size: 0.8em;
   font-weight: 700;
   color: var(--accent-hover);
-  margin: 0 0 0.4em;
+  margin: 0 0 0.5em;
 }
 .svc-hero-text h1{
   color: #fff;
-  font-size: 1.9em;
+  font-size: 2.6em;
   margin: 0;
   line-height: 1.2em;
 }
