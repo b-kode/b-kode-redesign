@@ -101,12 +101,12 @@
    uses (its source images are pre-cropped to 1048x483 / ~2.17:1; the
    service screenshots aren't, so without this the tile row looks
    uneven). object-fit keeps each image centred instead of stretched. */
-#Services ~ .container .highlight .image.featured {
+#Products ~ .container .highlight .image.featured {
     aspect-ratio: 1048 / 483;
     overflow: hidden;
 }
 
-#Services ~ .container .highlight .image.featured img {
+#Products ~ .container .highlight .image.featured img {
     height: 100%;
     object-fit: cover;
 }
@@ -116,30 +116,39 @@
    stretches columns to equal height (see .row { align-items: stretch }
    in main.css) — turn each tile into a flex column and pin its last
    paragraph (the link line) to the bottom so links line up. */
-#Services ~ .container .col-4 {
+#Products ~ .container .col-4 {
     display: flex;
 }
 
-#Services ~ .container .highlight {
+#Products ~ .container .highlight {
     display: flex;
     flex-direction: column;
     width: 100%;
 }
 
-#Services ~ .container .highlight > p:last-child {
+#Products ~ .container .highlight > p:last-child {
     margin-top: auto;
 }
 
 /* Placeholder tile (no screenshot yet) — icon on a flat tint instead
    of a photo, same footprint as the other tiles. */
-#Services ~ .container .highlight .image.featured.svc-placeholder {
+#Products ~ .container .highlight .image.featured.svc-placeholder {
     display: flex;
     align-items: center;
     justify-content: center;
     background: #f4f4f4;
 }
 
-#Services ~ .container .highlight .image.featured.svc-placeholder i {
+#Products ~ .container .highlight .image.featured.svc-placeholder i {
     font-size: 2.5em;
-    color: #c7c9cd;
+    color: #919499;
+}
+
+/* Who are we? team portraits are circular (.circular-image) — the
+   site's wrapper.style3 .image rule puts a white 10px square border
+   around every .image in a grey section, which looked fine on the
+   rectangular product/realisation tiles but boxes in an ugly white
+   square behind the round portraits now that this section is grey. */
+#Whoarewe ~ .container .image.featured {
+    border: 0;
 }

@@ -1,0 +1,199 @@
+/* UHI dashboard demo — real MapLibre map, ported from the
+   dashboard's own forecast view (frontend/js/app.js buildMap): a
+   real OSM basemap, the hourly forecast raster draped on top,
+   building/tree context layers, AOI outline, and a scrub slider
+   with play/pause. */
+
+.svc-demo-wrap{
+  max-width: 70em;
+  margin: 0 0 3.5em;
+}
+
+.uhi-toolbar{
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1em 1.5em;
+  margin-bottom: 1em;
+}
+
+.uhi-seg{
+  display: flex;
+  gap: 0.5em;
+}
+.uhi-seg button{
+  font-family: inherit;
+  font-size: 0.85em;
+  font-weight: 700;
+  color: #717479;
+  background: #eee;
+  border: 0;
+  border-radius: 0.35em;
+  padding: 0.6em 1.1em;
+  cursor: pointer;
+}
+.uhi-seg button.is-active{
+  color: #fff;
+  background: #f17773;
+}
+
+.uhi-stage{
+  position: relative;
+  border: 1px solid var(--rule, #ddd);
+  border-radius: 0.35em;
+  overflow: hidden;
+  background: #eef1f4;
+}
+.uhi-map{
+  width: 100%;
+  height: 520px;
+}
+
+.uhi-layers{
+  position: absolute;
+  top: 1em;
+  left: 1em;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4em;
+  padding: 0.65em 0.85em;
+  border-radius: 0.35em;
+  background: rgba(28, 31, 38, 0.85);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+.uhi-layers label{
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  font-size: 0.78em;
+  color: #fff;
+  cursor: pointer;
+}
+.uhi-layers input{ accent-color: var(--accent, #e97770); }
+
+.uhi-stats{
+  /* MapLibre's own zoom control docks top-right; give the card room
+     below it instead of overlapping (it would need ~2.6em clearance
+     at typical zoom-control size). */
+  position: absolute;
+  top: 4.2em;
+  right: 1em;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25em;
+  padding: 0.85em 1.15em;
+  border-radius: 0.35em;
+  background: rgba(28, 31, 38, 0.85);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+.uhi-stats .stat .lbl{
+  display: block;
+  font-size: 0.65em;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: rgba(255,255,255,0.55);
+}
+.uhi-stats .stat .val{
+  font-size: 0.95em;
+  color: #fff;
+}
+.uhi-stats .stat .val.warm{ color: #f98780; }
+
+.uhi-time{
+  position: absolute;
+  left: 1em;
+  bottom: 1em;
+  padding: 0.5em 0.9em;
+  border-radius: 0.35em;
+  background: rgba(28, 31, 38, 0.85);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  color: #fff;
+  font-size: 0.85em;
+}
+
+.uhi-legend{
+  position: absolute;
+  right: 1em;
+  bottom: 1em;
+  padding: 0.6em 0.9em;
+  border-radius: 0.35em;
+  background: rgba(28, 31, 38, 0.85);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  color: #fff;
+  font-size: 0.75em;
+  max-width: 14em;
+}
+.uhi-legend .lbl{
+  display: block;
+  margin-bottom: 0.35em;
+  color: rgba(255,255,255,0.75);
+}
+.uhi-legend .bar{
+  width: 10em;
+  height: 0.6em;
+  border-radius: 0.3em;
+  margin-bottom: 0.3em;
+}
+.uhi-legend .ticks{
+  display: flex;
+  justify-content: space-between;
+  color: rgba(255,255,255,0.6);
+}
+
+.uhi-scrub{
+  display: flex;
+  align-items: center;
+  gap: 1em;
+  margin-top: 1em;
+}
+.uhi-scrub button{
+  box-sizing: border-box;
+  flex: 0 0 2.5em;
+  width: 2.5em;
+  min-width: 2.5em;
+  max-width: 2.5em;
+  height: 2.5em;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+  border-radius: 100%;
+  border: 0;
+  background: var(--dark, #2f333b);
+  color: #fff;
+  font-size: 0.85em;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.uhi-scrub input[type="range"]{
+  flex: 1 1 auto;
+  accent-color: var(--accent, #e97770);
+  height: 0.35em;
+  border-radius: 0.2em;
+  background: var(--grey-2, #eee);
+  appearance: none;
+  -webkit-appearance: none;
+}
+.uhi-scrub input[type="range"]::-webkit-slider-thumb{
+  -webkit-appearance: none;
+  width: 1.1em;
+  height: 1.1em;
+  border-radius: 100%;
+  background: var(--accent, #e97770);
+  cursor: pointer;
+}
+.uhi-scrub input[type="range"]::-moz-range-thumb{
+  width: 1.1em;
+  height: 1.1em;
+  border: 0;
+  border-radius: 100%;
+  background: var(--accent, #e97770);
+  cursor: pointer;
+}

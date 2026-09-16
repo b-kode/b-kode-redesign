@@ -1,0 +1,174 @@
+/* Land cover demo — real MapLibre map. Overview: central Amsterdam
+   with zoom capped to the modelled extent and the 4 neighbourhoods
+   outlined and clickable. Click one to open its real 2 m
+   classification raster on a real OSM basemap (same pattern as the
+   SOLWEIG city-map -> detail-map flow). */
+
+.svc-demo-wrap{
+  max-width: 70em;
+  margin: 0 0 3.5em;
+}
+
+.lc-toolbar{
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1em 1.5em;
+  margin-bottom: 1em;
+}
+
+.lc-stage{
+  position: relative;
+  border: 1px solid var(--rule, #ddd);
+  border-radius: 0.35em;
+  overflow: hidden;
+  background: #0b0f15;
+}
+.lc-map{
+  width: 100%;
+  height: 460px;
+}
+
+.lc-hint{
+  position: absolute;
+  top: 1em;
+  left: 1em;
+  padding: 0.6em 0.9em;
+  border-radius: 0.35em;
+  background: rgba(28, 31, 38, 0.85);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  color: #fff;
+  font-size: 0.78em;
+  max-width: 16em;
+}
+
+.lc-layer-toggle{
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+  font-size: 0.85em;
+  color: #717479;
+  cursor: pointer;
+  padding-bottom: 0.75em; /* align baseline with the select field */
+}
+.lc-layer-toggle--detail{ color: #fff; padding-bottom: 0; }
+
+/* on/off switch: blue when on (land cover showing), light grey when
+   off — clearer at a glance than a plain checkbox for "is the
+   overlay on right now?" */
+.lc-switch{
+  position: relative;
+  display: inline-block;
+  width: 2.6em;
+  height: 1.5em;
+  flex: 0 0 auto;
+}
+.lc-switch input{
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 1;
+}
+.lc-switch-track{
+  position: absolute;
+  inset: 0;
+  border-radius: 1em;
+  background: #d5d7db;
+  transition: background-color 0.15s ease;
+}
+.lc-switch-track::before{
+  content: '';
+  position: absolute;
+  top: 0.15em;
+  left: 0.15em;
+  width: 1.2em;
+  height: 1.2em;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+  transition: transform 0.15s ease;
+}
+.lc-switch input:checked + .lc-switch-track{ background: #2f7dd6; }
+.lc-switch input:checked + .lc-switch-track::before{ transform: translateX(1.1em); }
+.lc-switch input:focus-visible + .lc-switch-track{ outline: 2px solid var(--accent, #e97770); outline-offset: 2px; }
+
+.lc-layer-toggle--detail{
+  /* Bottom-right, clear of both the zoom control (top-right) and
+     the scale bar (bottom-left). */
+  position: absolute;
+  bottom: 1em;
+  right: 1em;
+  padding: 0.5em 0.8em;
+  border-radius: 0.35em;
+  background: rgba(28, 31, 38, 0.85);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  color: #fff;
+  font-size: 0.78em;
+  z-index: 1;
+}
+
+.lc-detail-stage{ position: relative; }
+.lc-map--detail{ height: 520px; }
+
+/* legend as a glass overlay card on the overview map */
+.lc-legend--overview{
+  position: absolute;
+  right: 1em;
+  bottom: 1em;
+  max-width: 15em;
+  padding: 0.6em 0.9em;
+  border-radius: 0.35em;
+  background: rgba(28, 31, 38, 0.85);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.lc-detail{
+  border-top: 1px solid var(--rule, #ddd);
+  background: #1c1f26;
+  color: #fff;
+}
+.lc-detail[hidden]{ display: none; }
+.lc-detail-head{
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1em;
+  padding: 1em 1.25em 0.25em;
+}
+.lc-detail-head h3{ margin: 0; font-size: 1.1em; color: #fff; }
+.lc-detail-head .lc-close{
+  font-size: 0.75em;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: rgba(255,255,255,0.6);
+  cursor: pointer;
+  background: none;
+  border: 0;
+}
+.lc-detail-head .lc-close:hover{ color: #fff; }
+
+.lc-legend{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5em 1.25em;
+  padding: 0.75em 1.25em 1.25em;
+  font-size: 0.8em;
+}
+.lc-legend .swatch{
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  color: rgba(255,255,255,0.75);
+}
+.lc-legend .dot{
+  width: 0.9em;
+  height: 0.9em;
+  border-radius: 0.2em;
+  flex: 0 0 auto;
+}

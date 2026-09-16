@@ -1,67 +1,175 @@
-/* SOLWEIG demo — city/neighbourhood/slice toggle over a static UTCI raster.
-   No map library: an <img> swap, kept deliberately light. */
+/* SOLWEIG demo — real MapLibre maps, same pattern as the dashboard
+   (frontend/js/app.js): a city map with a hexbin UTCI choropleth,
+   click a selectable hex to open a 2 m detail map with the raster
+   overlaid on a dimmed OSM basemap. */
 
-.solweig-seg{
-  display: flex;
-  gap: 0.5em;
-  margin: 0 0 1.25em;
-}
-.solweig-seg button{
-  font-family: inherit;
-  font-size: 0.85em;
-  font-weight: 700;
-  color: #717479;
-  background: #eee;
-  border: 0;
-  border-radius: 0.35em;
-  padding: 0.6em 1.1em;
-  cursor: pointer;
-}
-.solweig-seg button.is-active{
-  color: #fff;
-  background: #f17773;
+.svc-demo-wrap{
+  max-width: 70em;
+  margin: 0 0 3.5em;
 }
 
-.solweig-figure{
-  position: relative;
-  border: 1px solid #eee;
-  border-radius: 0.35em;
-  overflow: hidden;
-  background: #f4f4f4;
-}
-.solweig-figure img{
-  display: block;
-  width: 100%;
-  height: auto;
-  max-height: 520px;
-  object-fit: contain;
-  background: #f4f4f4;
-}
-
-.solweig-stats{
+.sw-city-select{
   display: flex;
   flex-wrap: wrap;
-  gap: 1.5em;
-  padding: 0.9em 1.25em;
-  border-top: 1px solid #eee;
+  align-items: flex-end;
+  gap: 1em 1.5em;
+  margin-bottom: 1em;
+}
+
+.sw-stage{
+  position: relative;
+  border: 1px solid var(--rule, #ddd);
+  border-radius: 0.35em;
+  overflow: hidden;
+  background: #0b0f15;
+}
+
+.sw-map{
+  width: 100%;
+  height: 460px;
+}
+
+.sw-detail{
+  border-top: 1px solid var(--rule, #ddd);
+}
+.sw-detail[hidden]{ display: none; }
+
+.sw-detail-stage{
+  position: relative;
+}
+.sw-layer-toggle{
+  /* Below MapLibre's own zoom control (top-right), not beside it —
+     a fixed em offset next to the control clipped/overlapped it at
+     some viewport widths, blocking real mouse clicks on the label. */
+  position: absolute;
+  top: 4.2em;
+  right: 1em;
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  padding: 0.5em 0.8em;
+  border-radius: 0.35em;
+  background: rgba(28, 31, 38, 0.85);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  color: #fff;
+  font-size: 0.78em;
+  cursor: pointer;
+  z-index: 1;
+}
+.sw-layer-toggle input{ accent-color: var(--accent, #e97770); }
+.sw-legend--detail{
+  position: absolute;
+  left: 1em;
+  bottom: 1em;
+  transition: opacity 0.2s ease;
+}
+
+.sw-detail-head{
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1em;
+  padding: 1em 1.25em 0.5em;
+}
+.sw-detail-head h3{
+  margin: 0;
+  font-size: 1.1em;
+  color: #fff;
+}
+.sw-detail-head .sw-close{
+  font-size: 0.75em;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: rgba(255,255,255,0.6);
+  cursor: pointer;
+  background: none;
+  border: 0;
+}
+.sw-detail-head .sw-close:hover{ color: #fff; }
+.sw-detail-blurb{
+  padding: 0 1.25em 1em;
+  font-size: 0.85em;
+  color: rgba(255,255,255,0.55);
+}
+
+.sw-scenario-seg{
+  display: flex;
+  gap: 0.5em;
+  padding: 0 1.25em 1em;
+}
+.sw-scenario-seg button{
+  font-family: inherit;
+  font-size: 0.8em;
+  font-weight: 700;
+  color: rgba(255,255,255,0.7);
+  background: rgba(255,255,255,0.08);
+  border: 0;
+  border-radius: 0.35em;
+  padding: 0.55em 1em;
+  cursor: pointer;
+}
+.sw-scenario-seg button.is-active{
+  color: #0b0f15;
   background: #fff;
 }
-.solweig-stats .stat .lbl{
+
+/* glass overlay stats on the city map — top-left, since MapLibre's
+   own zoom control docks top-right and would otherwise overlap it */
+.sw-stats{
+  position: absolute;
+  top: 1em;
+  left: 1em;
+  padding: 0.7em 1em;
+  border-radius: 0.35em;
+  background: rgba(28, 31, 38, 0.85);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  color: #fff;
+  font-size: 0.8em;
+  max-width: 16em;
+}
+.sw-stats .lbl{
   display: block;
   font-size: 0.7em;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.15em;
-  color: #919499;
+  color: rgba(255,255,255,0.55);
+  margin-bottom: 0.3em;
 }
-.solweig-stats .stat .val{
-  font-size: 1em;
-  color: #484d55;
-}
-.solweig-stats .stat .val.warm{ color: #f17773; }
 
-.solweig-blurb{
-  padding: 0 0.1em 0.75em;
-  font-size: 0.9em;
-  color: #717479;
+.sw-legend{
+  position: absolute;
+  left: 1em;
+  bottom: 1em;
+  padding: 0.6em 0.9em;
+  border-radius: 0.35em;
+  background: rgba(28, 31, 38, 0.85);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  color: #fff;
+  font-size: 0.75em;
 }
+.sw-legend .bar{
+  width: 10em;
+  height: 0.6em;
+  border-radius: 0.3em;
+  margin-bottom: 0.35em;
+}
+.sw-legend .ticks{
+  display: flex;
+  justify-content: space-between;
+  color: rgba(255,255,255,0.6);
+}
+
+/* MapLibre popup — dark themed to match */
+.maplibregl-popup.sw-pop .maplibregl-popup-content{
+  background: #1c1f26;
+  color: #fff;
+  padding: 0.5em 0.8em;
+  border-radius: 0.3em;
+  font-size: 0.8em;
+}
+.maplibregl-popup.sw-pop .maplibregl-popup-tip{ border-top-color: #1c1f26; }

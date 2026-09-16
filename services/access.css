@@ -1,0 +1,156 @@
+/* Access to Green & Blue demo — real MapLibre map, ported from the
+   standalone interactive_map.html prototype (Leaflet + flatgeobuf)
+   onto the same OSM-basemap pattern as the other product demos:
+   every building coloured by its total access score, click one to
+   open a pentagon radar panel against the city average. */
+
+.svc-demo-wrap{
+  max-width: 70em;
+  margin: 0 0 3.5em;
+}
+
+.acc-toolbar{
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1em 1.5em;
+  margin-bottom: 1em;
+}
+
+.acc-stage{
+  position: relative;
+  border: 1px solid var(--rule, #ddd);
+  border-radius: 0.35em;
+  overflow: hidden;
+  background: #0b0f15;
+}
+.acc-map{
+  width: 100%;
+  height: 520px;
+}
+
+.acc-legend{
+  position: absolute;
+  left: 1em;
+  bottom: 1em;
+  padding: 0.7em 1em;
+  border-radius: 0.35em;
+  background: rgba(28, 31, 38, 0.85);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  color: #fff;
+  font-size: 0.75em;
+  max-width: 14em;
+}
+.acc-legend .bar{
+  width: 10em;
+  height: 0.6em;
+  border-radius: 0.3em;
+  margin: 0.35em 0;
+  background: linear-gradient(to right, #d9534f, #f0ad4e, #5cb85c, #1a9e6f);
+}
+.acc-legend .ticks{
+  display: flex;
+  justify-content: space-between;
+  color: rgba(255,255,255,0.6);
+}
+
+.acc-hint{
+  position: absolute;
+  top: 1em;
+  left: 1em;
+  padding: 0.6em 0.9em;
+  border-radius: 0.35em;
+  background: rgba(28, 31, 38, 0.85);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  color: #fff;
+  font-size: 0.78em;
+  max-width: 16em;
+}
+
+/* pentagon detail panel — below the map, same dark card treatment
+   as the SOLWEIG/UHI detail panels */
+.acc-detail{
+  border-top: 1px solid var(--rule, #ddd);
+  background: #1c1f26;
+  color: #fff;
+}
+.acc-detail[hidden]{ display: none; }
+.acc-detail-head{
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1em;
+  padding: 1em 1.25em 0.25em;
+}
+.acc-detail-head h3{ margin: 0; font-size: 1.1em; color: #fff; }
+.acc-detail-head .acc-close{
+  font-size: 0.75em;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: rgba(255,255,255,0.6);
+  cursor: pointer;
+  background: none;
+  border: 0;
+}
+.acc-detail-head .acc-close:hover{ color: #fff; }
+
+.acc-detail-body{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5em;
+  padding: 0.5em 1.25em 1.5em;
+}
+@media (max-width: 640px){
+  .acc-detail-body{ grid-template-columns: 1fr; }
+}
+.acc-radar{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.acc-radar svg{ width: 100%; max-width: 260px; height: auto; }
+
+.acc-score .total-lbl{
+  font-size: 0.7em;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: rgba(255,255,255,0.5);
+  margin-bottom: 0.25em;
+}
+.acc-score .total-val{
+  font-size: 2.2em;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1;
+  margin-bottom: 0.15em;
+}
+.acc-score .total-of{
+  font-size: 0.85em;
+  color: rgba(255,255,255,0.5);
+  margin-bottom: 1em;
+}
+.acc-score .rule-list{
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 0.82em;
+}
+.acc-score .rule-list li{
+  display: flex;
+  justify-content: space-between;
+  padding: 0.35em 0;
+  border-top: 1px solid rgba(255,255,255,0.1);
+}
+.acc-score .rule-list li:first-child{ border-top: 0; }
+.acc-score .rule-list .rule-val{ color: var(--accent-hover, #f98780); font-weight: 700; }
+
+.acc-avg-note{
+  padding: 0 1.25em 1.25em;
+  font-size: 0.82em;
+  color: rgba(255,255,255,0.55);
+}
+.acc-avg-note strong{ color: #fff; }
