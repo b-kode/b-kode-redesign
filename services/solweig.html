@@ -14,6 +14,7 @@
 		<link rel="stylesheet" href="../assets/css/main.css" />
 		<link rel="stylesheet" href="../assets/css/styles.css">
 		<link rel="stylesheet" href="epw.css">
+		<link rel="stylesheet" href="vendor/maplibre-gl.css">
 		<link rel="stylesheet" href="solweig.css">
 		<link rel="icon" href="../images/kode_favicon.png">
 
@@ -117,12 +118,20 @@
 
 							<div class="svc-block">
 								<h2>Demo</h2>
-								<p>Real 2&nbsp;m UTCI rasters for two demo cities — pick a neighbourhood and a
-								   climate slice (present-day hot day vs a 2050 / 2090 SSP5-8.5 hot day).</p>
-								<div id="solweigDemo">
-									<p class="svc-demo-loading">Loading demo data…</p>
-								</div>
+								<p>Real 2&nbsp;m UTCI rasters for two demo cities. The city map shows the
+								   typical-day heat-stress choropleth per neighbourhood — click an outlined
+								   hex to open its 2&nbsp;m SOLWEIG detail with the basemap underneath.</p>
 							</div>
+
+						</div>
+
+						<div class="svc-demo-wrap">
+							<div id="solweigDemo">
+								<p class="svc-demo-loading">Loading demo data…</p>
+							</div>
+						</div>
+
+						<div class="svc-page">
 
 							<div class="svc-block">
 								<h2>Free request</h2>
@@ -186,6 +195,7 @@
 		<script src="../assets/js/util.js"></script>
 		<script src="../assets/js/main.js"></script>
 		<script src="https://kit.fontawesome.com/bdcf1cb699.js" crossorigin="anonymous"></script>
+		<script src="vendor/maplibre-gl.js"></script>
 		<script src="solweig.js"></script>
 
 	</body>
