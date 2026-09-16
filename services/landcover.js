@@ -50,6 +50,26 @@ function boundsToPolygonFeature(b, props){
 }
 function cornersFor(b){ return [[b[0], b[3]], [b[2], b[3]], [b[2], b[1]], [b[0], b[1]]]; }
 
+/* The land-cover rasters are exported as square PNGs in a
+   latitude-corrected (roughly equal-area) projection, but meta.json's
+   bounds are raw lon/lat corners. MapLibre's `image` source stretches
+   an image linearly across whatever corners it's given, with no
+   further reprojection — so feeding it the raw bounds squashes the
+   image east-west by ~1.6x at Amsterdam's latitude (cos(52°) ≈ 0.62)
+   and it no longer lines up with the basemap underneath. Recompute a
+   west/east span whose on-the-ground width matches the north/south
+   height (same centre), so the image lands where its square pixels
+   actually are. */
+function squareCorrectedBounds(b){
+  const [w, s, e, n] = b;
+  const latMid = (s + n) / 2;
+  const cosLat = Math.max(0.05, Math.cos(latMid * Math.PI / 180));
+  const heightDeg = n - s;
+  const widthDeg = heightDeg / cosLat;
+  const cx = (w + e) / 2;
+  return [cx - widthDeg / 2, s, cx + widthDeg / 2, n];
+}
+
 async function initLandcoverDemo(el){
   let meta;
   const base = 'demo/landcover/';
@@ -107,9 +127,12 @@ async function initLandcoverDemo(el){
     cityMap = new maplibregl.Map({
       container: $cityMapEl,
       style: JSON.parse(JSON.stringify(OSM_STYLE)),
-      bounds: [[w, s], [e, n]], fitBoundsOptions: { padding: 20 },
-      maxBounds: [[w - 0.02, s - 0.02], [e + 0.02, n + 0.02]],
-      minZoom: 11, maxZoom: 17,
+      // Start noticeably more zoomed out than a tight fit to the
+      // modelled extent — generous padding gives real context around
+      // Amsterdam instead of cropping right to the data edge.
+      bounds: [[w, s], [e, n]], fitBoundsOptions: { padding: 90 },
+      maxBounds: [[w - 0.05, s - 0.05], [e + 0.05, n + 0.05]],
+      minZoom: 10, maxZoom: 17,
       attributionControl: { compact: true }, dragRotate: false,
     });
     cityMap.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
@@ -119,7 +142,7 @@ async function initLandcoverDemo(el){
       try { cityMap.setLayoutProperty('osm', 'visibility', 'visible'); } catch (e) {}
 
       // full-city land-cover overlay, under the neighbourhood outlines
-      cityMap.addSource('lc-full', { type: 'image', url: base + meta.full.file, coordinates: cornersFor(meta.full.bounds) });
+      cityMap.addSource('lc-full', { type: 'image', url: base + meta.full.file, coordinates: cornersFor(squareCorrectedBounds(meta.full.bounds)) });
       cityMap.addLayer({ id: 'lc-full', type: 'raster', source: 'lc-full',
         paint: { 'raster-opacity': 0.85, 'raster-resampling': 'nearest' } });
 
@@ -175,7 +198,7 @@ async function initLandcoverDemo(el){
 
     dm.on('load', () => {
       try { dm.setLayoutProperty('osm', 'visibility', 'visible'); } catch (e) {}
-      dm.addSource('lc', { type: 'image', url: base + h.file, coordinates: cornersFor(h.bounds) });
+      dm.addSource('lc', { type: 'image', url: base + h.file, coordinates: cornersFor(squareCorrectedBounds(h.bounds)) });
       dm.addLayer({ id: 'lc', type: 'raster', source: 'lc',
         paint: { 'raster-opacity': 0.92, 'raster-resampling': 'nearest' } });
       dm.setLayoutProperty('lc', 'visibility', $detailLcToggle.checked ? 'visible' : 'none');
