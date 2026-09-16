@@ -49,36 +49,33 @@
   height: 520px;
 }
 
-.uhi-layers{
+/* Everything stacks in this one top-left column. MapLibre's own
+   controls own the top-right (zoom), bottom-left (scale) and
+   bottom-right (attribution) corners — nothing we draw ever
+   competes with them for space. */
+.uhi-overlay-stack{
   position: absolute;
   top: 1em;
   left: 1em;
+  z-index: 1;
   display: flex;
   flex-direction: column;
-  gap: 0.4em;
-  padding: 0.65em 0.85em;
+  gap: 0.6em;
+  max-width: 16em;
+}
+
+.uhi-time{
+  padding: 0.5em 0.9em;
   border-radius: 0.35em;
   background: rgba(28, 31, 38, 0.85);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
-}
-.uhi-layers label{
-  display: flex;
-  align-items: center;
-  gap: 0.5em;
-  font-size: 0.78em;
   color: #fff;
-  cursor: pointer;
+  font-size: 0.85em;
+  align-self: flex-start;
 }
-.uhi-layers input{ accent-color: var(--accent, #e97770); }
 
 .uhi-stats{
-  /* MapLibre's own zoom control docks top-right; give the card room
-     below it instead of overlapping (it would need ~2.6em clearance
-     at typical zoom-control size). */
-  position: absolute;
-  top: 4.2em;
-  right: 1em;
   display: flex;
   flex-wrap: wrap;
   gap: 1.25em;
@@ -102,23 +99,7 @@
 }
 .uhi-stats .stat .val.warm{ color: #f98780; }
 
-.uhi-time{
-  position: absolute;
-  left: 1em;
-  bottom: 1em;
-  padding: 0.5em 0.9em;
-  border-radius: 0.35em;
-  background: rgba(28, 31, 38, 0.85);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  color: #fff;
-  font-size: 0.85em;
-}
-
 .uhi-legend{
-  position: absolute;
-  right: 1em;
-  bottom: 1em;
   padding: 0.6em 0.9em;
   border-radius: 0.35em;
   background: rgba(28, 31, 38, 0.85);
@@ -126,7 +107,6 @@
   -webkit-backdrop-filter: blur(4px);
   color: #fff;
   font-size: 0.75em;
-  max-width: 14em;
 }
 .uhi-legend .lbl{
   display: block;
@@ -144,6 +124,27 @@
   justify-content: space-between;
   color: rgba(255,255,255,0.6);
 }
+
+.uhi-layers{
+  display: flex;
+  flex-direction: column;
+  gap: 0.4em;
+  padding: 0.65em 0.85em;
+  border-radius: 0.35em;
+  background: rgba(28, 31, 38, 0.85);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  align-self: flex-start;
+}
+.uhi-layers label{
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  font-size: 0.78em;
+  color: #fff;
+  cursor: pointer;
+}
+.uhi-layers input{ accent-color: var(--accent, #e97770); }
 
 .uhi-scrub{
   display: flex;

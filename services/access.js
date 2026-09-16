@@ -96,11 +96,16 @@ async function initAccessDemo(el){
   el.innerHTML = `
     <div class="acc-stage">
       <div class="acc-map" data-map></div>
-      <div class="acc-hint">Click any coloured building for its 5-rule pentagon.</div>
-      <div class="acc-legend">
-        <span>Total access score</span>
-        <div class="bar"></div>
-        <div class="ticks"><span>Worst</span><span>Best</span></div>
+      <!-- Everything stacks top-left only — MapLibre's own controls
+           own the other 3 corners (zoom top-right, scale
+           bottom-left, attribution bottom-right). -->
+      <div class="acc-overlay-stack">
+        <div class="acc-hint">Click any coloured building for its 5-rule pentagon.</div>
+        <div class="acc-legend">
+          <span>Total access score</span>
+          <div class="bar"></div>
+          <div class="ticks"><span>Worst</span><span>Best</span></div>
+        </div>
       </div>
     </div>
     <div class="acc-detail" data-detail hidden>

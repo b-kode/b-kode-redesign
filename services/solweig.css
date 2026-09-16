@@ -38,12 +38,6 @@
   position: relative;
 }
 .sw-layer-toggle{
-  /* Below MapLibre's own zoom control (top-right), not beside it —
-     a fixed em offset next to the control clipped/overlapped it at
-     some viewport widths, blocking real mouse clicks on the label. */
-  position: absolute;
-  top: 4.2em;
-  right: 1em;
   display: flex;
   align-items: center;
   gap: 0.5em;
@@ -55,13 +49,9 @@
   color: #fff;
   font-size: 0.78em;
   cursor: pointer;
-  z-index: 1;
 }
 .sw-layer-toggle input{ accent-color: var(--accent, #e97770); }
 .sw-legend--detail{
-  position: absolute;
-  left: 1em;
-  bottom: 1em;
   transition: opacity 0.2s ease;
 }
 
@@ -94,33 +84,48 @@
   color: rgba(255,255,255,0.55);
 }
 
+/* Was styled for a dark glass card (white-on-white-ish) from when
+   this sat as an overlay on the map; now it's a normal bar on the
+   plain white page below the map, so it needs the site's light
+   button treatment instead — same as .sw-city-scenario-seg. */
 .sw-scenario-seg{
   display: flex;
   gap: 0.5em;
-  padding: 0 1.25em 1em;
+  padding: 0.75em 1.25em 1.25em;
 }
 .sw-scenario-seg button{
   font-family: inherit;
   font-size: 0.8em;
   font-weight: 700;
-  color: rgba(255,255,255,0.7);
-  background: rgba(255,255,255,0.08);
+  color: #717479;
+  background: #eee;
   border: 0;
   border-radius: 0.35em;
   padding: 0.55em 1em;
   cursor: pointer;
 }
 .sw-scenario-seg button.is-active{
-  color: #0b0f15;
-  background: #fff;
+  color: #fff;
+  background: #f17773;
 }
 
-/* glass overlay stats on the city map — top-left, since MapLibre's
-   own zoom control docks top-right and would otherwise overlap it */
-.sw-stats{
+/* Every overlay card stacks in this one top-left column. MapLibre's
+   own controls own the top-right (zoom), bottom-left (scale) and
+   bottom-right (attribution) corners on every map in this demo —
+   nothing we draw is ever allowed to compete with them for space,
+   so we never touch those three corners at all. */
+.sw-overlay-stack{
   position: absolute;
   top: 1em;
   left: 1em;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6em;
+  max-width: 16em;
+}
+
+.sw-stats{
   padding: 0.7em 1em;
   border-radius: 0.35em;
   background: rgba(28, 31, 38, 0.85);
@@ -128,7 +133,6 @@
   -webkit-backdrop-filter: blur(4px);
   color: #fff;
   font-size: 0.8em;
-  max-width: 16em;
 }
 .sw-stats .lbl{
   display: block;
@@ -141,9 +145,6 @@
 }
 
 .sw-legend{
-  position: absolute;
-  left: 1em;
-  bottom: 1em;
   padding: 0.6em 0.9em;
   border-radius: 0.35em;
   background: rgba(28, 31, 38, 0.85);
@@ -173,34 +174,27 @@
 
 /* City map's own present/2050/2090 choice for the hexbin overview —
    independent of the neighbourhood detail's scenario choice below.
-   Bottom-right: clear of stats (top-left), legend (bottom-left) and
-   the zoom control (top-right). */
+   A normal bar BELOW the map (not an overlay on top of it), so it
+   can never overlap the basemap's own controls or popups. */
 .sw-city-scenario-seg{
-  position: absolute;
-  right: 1em;
-  bottom: 1em;
   display: flex;
-  gap: 0.4em;
-  padding: 0.4em;
-  border-radius: 0.35em;
-  background: rgba(28, 31, 38, 0.85);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  gap: 0.5em;
+  padding: 0.75em 0 0;
 }
 .sw-city-scenario-seg button{
   font-family: inherit;
-  font-size: 0.75em;
+  font-size: 0.8em;
   font-weight: 700;
-  color: rgba(255,255,255,0.7);
-  background: rgba(255,255,255,0.08);
+  color: #717479;
+  background: #eee;
   border: 0;
-  border-radius: 0.3em;
-  padding: 0.45em 0.8em;
+  border-radius: 0.35em;
+  padding: 0.55em 1.1em;
   cursor: pointer;
 }
 .sw-city-scenario-seg button.is-active{
-  color: #0b0f15;
-  background: #fff;
+  color: #fff;
+  background: #f17773;
 }
 
 /* MapLibre popup — dark themed to match */

@@ -57,19 +57,24 @@ async function initUhiDemo(el){
     </div>
     <div class="uhi-stage">
       <div class="uhi-map" data-map></div>
-      <div class="uhi-layers">
-        <label><input type="checkbox" data-layer="buildings" checked /> Buildings</label>
-        <label><input type="checkbox" data-layer="trees" checked /> Tree canopy</label>
-        <label><input type="checkbox" data-layer="aoi" checked /> Modelled area</label>
-      </div>
-      <div class="uhi-time" data-time>&mdash;</div>
-      <div class="uhi-stats">
-        <div class="stat"><span class="lbl">City mean temperature</span><span class="val" data-citymean>&mdash;</span></div>
-      </div>
-      <div class="uhi-legend" data-legend>
-        <span class="lbl" data-legendlabel>&mdash;</span>
-        <div class="bar" data-legendbar></div>
-        <div class="ticks"><span data-legendlo>&mdash;</span><span data-legendhi>&mdash;</span></div>
+      <!-- Everything stacks top-left only — MapLibre's own controls
+           own the other 3 corners (zoom top-right, scale
+           bottom-left, attribution bottom-right) on this map. -->
+      <div class="uhi-overlay-stack">
+        <div class="uhi-time" data-time>&mdash;</div>
+        <div class="uhi-stats">
+          <div class="stat"><span class="lbl">City mean temperature</span><span class="val" data-citymean>&mdash;</span></div>
+        </div>
+        <div class="uhi-legend" data-legend>
+          <span class="lbl" data-legendlabel>&mdash;</span>
+          <div class="bar" data-legendbar></div>
+          <div class="ticks"><span data-legendlo>&mdash;</span><span data-legendhi>&mdash;</span></div>
+        </div>
+        <div class="uhi-layers">
+          <label><input type="checkbox" data-layer="buildings" checked /> Buildings</label>
+          <label><input type="checkbox" data-layer="trees" checked /> Tree canopy</label>
+          <label><input type="checkbox" data-layer="aoi" checked /> Modelled area</label>
+        </div>
       </div>
     </div>
     <div class="uhi-scrub">
