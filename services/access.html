@@ -14,6 +14,7 @@
 		<link rel="stylesheet" href="../assets/css/main.css" />
 		<link rel="stylesheet" href="../assets/css/styles.css">
 		<link rel="stylesheet" href="epw.css">
+		<link rel="stylesheet" href="vendor/maplibre-gl.css">
 		<link rel="stylesheet" href="access.css">
 		<link rel="icon" href="../images/kode_favicon.png">
 
@@ -118,12 +119,20 @@
 
 							<div class="svc-block">
 								<h2>Demo</h2>
-								<p>2,700+ real scored buildings from the demo city &mdash; pick one (or pull a random
-								   building) to see its five-rule pentagon against the city average.</p>
-								<div id="accessDemo">
-									<p class="svc-demo-loading">Loading demo data…</p>
-								</div>
+								<p>2,700+ real scored buildings over Bruges, on a real map &mdash; every
+								   building is coloured by its total access score. Click any building to
+								   see its five-rule pentagon against the city average.</p>
 							</div>
+
+						</div>
+
+						<div class="svc-demo-wrap">
+							<div id="accessDemo">
+								<p class="svc-demo-loading">Loading demo data…</p>
+							</div>
+						</div>
+
+						<div class="svc-page">
 
 							<div class="svc-block">
 								<h2>Free request</h2>
@@ -187,6 +196,7 @@
 		<script src="../assets/js/util.js"></script>
 		<script src="../assets/js/main.js"></script>
 		<script src="https://kit.fontawesome.com/bdcf1cb699.js" crossorigin="anonymous"></script>
+		<script src="vendor/maplibre-gl.js"></script>
 		<script src="access.js"></script>
 
 	</body>
