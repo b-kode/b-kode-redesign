@@ -46,18 +46,63 @@
 .lc-layer-toggle{
   display: flex;
   align-items: center;
-  gap: 0.5em;
+  gap: 0.6em;
   font-size: 0.85em;
   color: #717479;
   cursor: pointer;
   padding-bottom: 0.75em; /* align baseline with the select field */
 }
-.lc-layer-toggle input{ accent-color: var(--accent, #e97770); }
+.lc-layer-toggle--detail{ color: #fff; padding-bottom: 0; }
+
+/* on/off switch: blue when on (land cover showing), light grey when
+   off — clearer at a glance than a plain checkbox for "is the
+   overlay on right now?" */
+.lc-switch{
+  position: relative;
+  display: inline-block;
+  width: 2.6em;
+  height: 1.5em;
+  flex: 0 0 auto;
+}
+.lc-switch input{
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 1;
+}
+.lc-switch-track{
+  position: absolute;
+  inset: 0;
+  border-radius: 1em;
+  background: #d5d7db;
+  transition: background-color 0.15s ease;
+}
+.lc-switch-track::before{
+  content: '';
+  position: absolute;
+  top: 0.15em;
+  left: 0.15em;
+  width: 1.2em;
+  height: 1.2em;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+  transition: transform 0.15s ease;
+}
+.lc-switch input:checked + .lc-switch-track{ background: #2f7dd6; }
+.lc-switch input:checked + .lc-switch-track::before{ transform: translateX(1.1em); }
+.lc-switch input:focus-visible + .lc-switch-track{ outline: 2px solid var(--accent, #e97770); outline-offset: 2px; }
 
 .lc-layer-toggle--detail{
+  /* Below MapLibre's own zoom control (top-right), not beside it —
+     a fixed em offset next to the control was clipped/overlapped at
+     some viewport widths (same fix pattern as the SOLWEIG detail's
+     UTCI-layer toggle). */
   position: absolute;
-  top: 1em;
-  right: 4.2em;
+  top: 4.2em;
+  right: 1em;
   padding: 0.5em 0.8em;
   border-radius: 0.35em;
   background: rgba(28, 31, 38, 0.85);
