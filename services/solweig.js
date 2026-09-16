@@ -81,11 +81,13 @@ async function initSolweigDemo(el){
     </div>
     <div class="sw-stage">
       <div class="sw-map" data-citymap></div>
+      <div class="sw-city-scenario-seg" data-cityscenarioseg></div>
       <div class="sw-stats" data-citystats hidden>
         <span class="lbl">Typical-day mean UTCI</span>
         <span data-cityrange>—</span>
       </div>
       <div class="sw-legend" data-legend hidden>
+        <span class="lbl" data-legendlabel>UTCI · typical day</span>
         <div class="bar" data-legendbar></div>
         <div class="ticks"><span data-legendlo>—</span><span data-legendhi>—</span></div>
       </div>
@@ -116,11 +118,13 @@ async function initSolweigDemo(el){
   const $detail = el.querySelector('[data-detail]');
   const $detailTitle = el.querySelector('[data-detailtitle]');
   const $detailBlurb = el.querySelector('[data-detailblurb]');
+  const $cityScenarioSeg = el.querySelector('[data-cityscenarioseg]');
   const $scenarioSeg = el.querySelector('[data-scenarioseg]');
   const $close = el.querySelector('[data-close]');
   const $cityStats = el.querySelector('[data-citystats]');
   const $cityRange = el.querySelector('[data-cityrange]');
   const $legend = el.querySelector('[data-legend]');
+  const $legendLabel = el.querySelector('[data-legendlabel]');
   const $legendBar = el.querySelector('[data-legendbar]');
   const $legendLo = el.querySelector('[data-legendlo]');
   const $legendHi = el.querySelector('[data-legendhi]');
@@ -130,28 +134,55 @@ async function initSolweigDemo(el){
   const $detailLegendLo = el.querySelector('[data-detaillegendlo]');
   const $detailLegendHi = el.querySelector('[data-detaillegendhi]');
 
-  let story = null, cityMap = null, detailMap = null, scenarioId = 'present', openHood = null;
+  // Two independent scenario choices: the city-wide hexbin overview
+  // (cityScenarioId) and the open neighbourhood's 2 m detail
+  // (detailScenarioId) — picking present/2050/2090 in one must not
+  // change the other, since they answer different questions (city
+  // typical-day pattern vs one neighbourhood's hot-day raster).
+  let story = null, cityMap = null, detailMap = null, openHood = null;
+  let cityScenarioId = 'present', detailScenarioId = 'present';
   let utciVisible = true;
 
   function base(){ return `demo/solweig/${$city.value}/`; }
 
   async function loadCity(){
     story = await loadJSON(base() + 'story.json');
-    scenarioId = story.scenarios[0];
+    cityScenarioId = story.scenarios[0];
     $detail.hidden = true;
     openHood = null;
+    renderCityScenarioSeg();
     await buildCityMap();
   }
 
+  function renderCityScenarioSeg(){
+    $cityScenarioSeg.innerHTML = story.scenarios.map(id =>
+      `<button data-scen="${id}" class="${id === cityScenarioId ? 'is-active' : ''}">${SCEN_LABEL[id] || id}</button>`).join('');
+    $cityScenarioSeg.querySelectorAll('button').forEach(b =>
+      b.addEventListener('click', () => {
+        cityScenarioId = b.dataset.scen;
+        $cityScenarioSeg.querySelectorAll('button').forEach(x => x.classList.toggle('is-active', x === b));
+        try { cityMap.setPaintProperty('hex-fill', 'fill-color', hexRampExpr(story.hexRange, cityScenarioId)); } catch (e) {}
+        renderLegend();
+      }));
+  }
+
   function renderLegend(){
-    const [lo, hi] = story.hexRange || [30, 40];
+    // story.hexRanges gives a per-scenario [lo,hi] (present/2050/2090
+    // each have their own spread); story.hexRange is the shared
+    // fallback range used by hexRampExpr() to keep colours
+    // comparable across scenarios — show the scenario's own range on
+    // the legend ticks (what the colours actually span here) while
+    // the map itself still ramps on the shared scale.
+    const perScenario = (story.hexRanges && story.hexRanges[cityScenarioId]) || story.hexRange || [30, 40];
+    const [lo, hi] = perScenario;
     const grad = HEX_RAMP.map((c, i) => `${c} ${((i / (HEX_RAMP.length - 1)) * 100).toFixed(0)}%`).join(', ');
     $legendBar.style.background = `linear-gradient(to right, ${grad})`;
     $legendLo.textContent = lo.toFixed(0) + ' °C';
     $legendHi.textContent = hi.toFixed(0) + ' °C';
+    $legendLabel.textContent = `UTCI · typical day · ${SCEN_LABEL[cityScenarioId] || cityScenarioId}`;
     $legend.hidden = false;
     $cityStats.hidden = false;
-    $cityRange.textContent = `${lo.toFixed(0)}–${hi.toFixed(0)} °C · ${SCEN_LABEL[scenarioId] || scenarioId}`;
+    $cityRange.textContent = `${lo.toFixed(0)}–${hi.toFixed(0)} °C · ${SCEN_LABEL[cityScenarioId] || cityScenarioId}`;
   }
 
   async function buildCityMap(){
@@ -176,7 +207,7 @@ async function initSolweigDemo(el){
       try { map.setLayoutProperty('osm', 'visibility', 'visible'); } catch (e) {}
       map.addSource('hexes', { type: 'geojson', data: hexGeo, promoteId: 'hex_id' });
       map.addLayer({ id: 'hex-fill', type: 'fill', source: 'hexes',
-        paint: { 'fill-color': hexRampExpr(story.hexRange, scenarioId), 'fill-opacity': 0.75 } });
+        paint: { 'fill-color': hexRampExpr(story.hexRange, cityScenarioId), 'fill-opacity': 0.75 } });
       map.addLayer({ id: 'hex-edge', type: 'line', source: 'hexes',
         paint: { 'line-color': '#22303c', 'line-opacity': 0.4, 'line-width': 0.4 } });
       map.addLayer({ id: 'hex-sel-glow', type: 'line', source: 'hexes',
@@ -202,7 +233,7 @@ async function initSolweigDemo(el){
         const f = e.features && e.features[0];
         if (!f) return;
         const p = f.properties;
-        const v = p[`utci_${scenarioId}`] ?? p.utci_present ?? p.utci;
+        const v = p[`utci_${cityScenarioId}`] ?? p.utci_present ?? p.utci;
         pop.setLngLat(e.lngLat)
           .setHTML(`<b>${v == null ? '—' : (+v).toFixed(1) + ' °C'}</b>` +
             (byId[p.hex_id] ? ' · click for 2 m detail' : ''))
@@ -230,22 +261,24 @@ async function initSolweigDemo(el){
     $detail.hidden = false;
     $detailTitle.textContent = h.name;
     $detailBlurb.textContent = h.blurb;
-    scenarioId = h.scenarios[0].id;
+    detailScenarioId = h.scenarios[0].id;
     renderScenarioSeg(h);
     await buildDetailMap(h);
     $detail.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 
+  // This is the neighbourhood detail's OWN present/2050/2090 choice —
+  // deliberately independent of the city overview's cityScenarioId
+  // (picked via $cityScenarioSeg above). Switching one must never
+  // move the other's map or legend.
   function renderScenarioSeg(h){
     $scenarioSeg.innerHTML = h.scenarios.map(sc =>
-      `<button data-scen="${sc.id}" class="${sc.id === scenarioId ? 'is-active' : ''}">${sc.label}</button>`).join('');
+      `<button data-scen="${sc.id}" class="${sc.id === detailScenarioId ? 'is-active' : ''}">${sc.label}</button>`).join('');
     $scenarioSeg.querySelectorAll('button').forEach(b =>
       b.addEventListener('click', () => {
-        scenarioId = b.dataset.scen;
+        detailScenarioId = b.dataset.scen;
         $scenarioSeg.querySelectorAll('button').forEach(x => x.classList.toggle('is-active', x === b));
         applyDetailRaster(h);
-        try { cityMap.setPaintProperty('hex-fill', 'fill-color', hexRampExpr(story.hexRange, scenarioId)); } catch (e) {}
-        renderLegend();
       }));
   }
 
@@ -289,7 +322,7 @@ async function initSolweigDemo(el){
   function applyDetailRaster(h){
     const dm = detailMap;
     if (!dm) return;
-    const sc = h.scenarios.find(s => s.id === scenarioId) || h.scenarios[0];
+    const sc = h.scenarios.find(s => s.id === detailScenarioId) || h.scenarios[0];
     if (!sc.utci || !sc.utciBounds) return;
     const url = base() + sc.utci;
     const coords = cornersFor(sc.utciBounds);

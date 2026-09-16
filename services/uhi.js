@@ -91,8 +91,28 @@ async function initUhiDemo(el){
 
   let mode = 'uhi', playTimer = null, map = null;
 
-  const ABS_RAMP = ['#313695', '#4575b4', '#74add1', '#abd9e9', '#fee090', '#fdae61', '#f46d43', '#d73027', '#a50026'];
-  const UHI_RAMP = ['#fff5f0', '#fee0d2', '#fcbba1', '#fc9272', '#fb6a4a', '#ef3b2c', '#cb181d', '#99000d'];
+  /* Exact ramps from pipeline/build_forecast.py (RAMP / REDS), also
+     mirrored in frontend/js/app.js — these are what the frame PNGs
+     are actually coloured with. The earlier version of this legend
+     used made-up placeholder colours that didn't match the pixels
+     at all. "Absolute" is turbo (remapped) + a purple hot tail;
+     "Heat contrast" is a blue->yellow->red diverging ramp. */
+  const ABS_RAMP = [
+    [0.00, [48, 18, 59]],   [0.05, [69, 76, 183]],   [0.10, [62, 136, 226]],
+    [0.15, [51, 188, 217]], [0.20, [45, 217, 188]],  [0.25, [48, 237, 151]],
+    [0.30, [87, 249, 108]], [0.35, [132, 253, 74]],  [0.40, [174, 248, 53]],
+    [0.45, [207, 237, 45]], [0.50, [231, 220, 50]],  [0.55, [245, 198, 49]],
+    [0.60, [253, 173, 44]], [0.65, [253, 145, 36]],  [0.70, [247, 115, 28]],
+    [0.75, [236, 85, 20]],  [0.80, [217, 59, 13]],   [0.85, [177, 36, 6]],
+    [0.90, [137, 20, 12]],  [0.95, [106, 17, 38]],   [1.00, [74, 13, 63]],
+  ];
+  const UHI_RAMP = [
+    [0.000, [49, 54, 149]],   [0.125, [69, 117, 180]],  [0.250, [116, 173, 209]],
+    [0.375, [171, 217, 233]], [0.500, [255, 255, 191]],  [0.625, [254, 224, 144]],
+    [0.750, [253, 174, 97]],  [0.875, [244, 109, 67]],   [1.000, [215, 48, 39]],
+  ];
+  const rampCSS = stops => stops.map(([t, c]) =>
+    `rgb(${c.join(',')}) ${(t * 100).toFixed(0)}%`).join(', ');
 
   function frameFile(i){
     const pattern = meta.layers[mode].file; // e.g. "frame_{k:03d}.png"
@@ -112,16 +132,14 @@ async function initUhiDemo(el){
   function renderLegend(i){
     if (mode === 'absolute') {
       const [lo, hi] = meta.layers.absolute.domain_c || meta.value_domain_c || [10, 20];
-      const grad = ABS_RAMP.map((c, k) => `${c} ${((k / (ABS_RAMP.length - 1)) * 100).toFixed(0)}%`).join(', ');
-      $legendBar.style.background = `linear-gradient(to right, ${grad})`;
+      $legendBar.style.background = `linear-gradient(to right, ${rampCSS(ABS_RAMP)})`;
       $legendLo.textContent = lo.toFixed(0) + ' °C';
       $legendHi.textContent = hi.toFixed(0) + ' °C';
       $legendLabel.textContent = 'Absolute air temperature';
     } else {
       const perFrame = meta.layers.uhi.per_frame_domain_c;
       const [lo, hi] = (perFrame && perFrame[i]) || [10, 12];
-      const grad = UHI_RAMP.map((c, k) => `${c} ${((k / (UHI_RAMP.length - 1)) * 100).toFixed(0)}%`).join(', ');
-      $legendBar.style.background = `linear-gradient(to right, ${grad})`;
+      $legendBar.style.background = `linear-gradient(to right, ${rampCSS(UHI_RAMP)})`;
       $legendLo.textContent = lo.toFixed(1) + ' °C';
       $legendHi.textContent = hi.toFixed(1) + ' °C';
       $legendLabel.textContent = 'Heat contrast (coolest → warmest pixel, this hour)';

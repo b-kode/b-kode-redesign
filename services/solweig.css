@@ -152,6 +152,13 @@
   color: #fff;
   font-size: 0.75em;
 }
+.sw-legend .lbl{
+  display: block;
+  font-size: 0.85em;
+  color: rgba(255,255,255,0.7);
+  margin-bottom: 0.35em;
+  white-space: nowrap;
+}
 .sw-legend .bar{
   width: 10em;
   height: 0.6em;
@@ -162,6 +169,38 @@
   display: flex;
   justify-content: space-between;
   color: rgba(255,255,255,0.6);
+}
+
+/* City map's own present/2050/2090 choice for the hexbin overview —
+   independent of the neighbourhood detail's scenario choice below.
+   Bottom-right: clear of stats (top-left), legend (bottom-left) and
+   the zoom control (top-right). */
+.sw-city-scenario-seg{
+  position: absolute;
+  right: 1em;
+  bottom: 1em;
+  display: flex;
+  gap: 0.4em;
+  padding: 0.4em;
+  border-radius: 0.35em;
+  background: rgba(28, 31, 38, 0.85);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+.sw-city-scenario-seg button{
+  font-family: inherit;
+  font-size: 0.75em;
+  font-weight: 700;
+  color: rgba(255,255,255,0.7);
+  background: rgba(255,255,255,0.08);
+  border: 0;
+  border-radius: 0.3em;
+  padding: 0.45em 0.8em;
+  cursor: pointer;
+}
+.sw-city-scenario-seg button.is-active{
+  color: #0b0f15;
+  background: #fff;
 }
 
 /* MapLibre popup — dark themed to match */
