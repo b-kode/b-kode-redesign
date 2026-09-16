@@ -96,12 +96,10 @@
 .lc-switch input:focus-visible + .lc-switch-track{ outline: 2px solid var(--accent, #e97770); outline-offset: 2px; }
 
 .lc-layer-toggle--detail{
-  /* Below MapLibre's own zoom control (top-right), not beside it —
-     a fixed em offset next to the control was clipped/overlapped at
-     some viewport widths (same fix pattern as the SOLWEIG detail's
-     UTCI-layer toggle). */
+  /* Bottom-right, clear of both the zoom control (top-right) and
+     the scale bar (bottom-left). */
   position: absolute;
-  top: 4.2em;
+  bottom: 1em;
   right: 1em;
   padding: 0.5em 0.8em;
   border-radius: 0.35em;
