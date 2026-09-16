@@ -125,12 +125,23 @@ async function initUhiDemo(el){
     return pattern.replace('{k:03d}', k);
   }
 
+  // uhi.urban_mean_c/rural_mean_c/uhi_c are indexed over the FULL run
+  // (meta.n_hours, e.g. 361h), not just the n_frames (72) shown as
+  // map frames — meta.frame_start_index is where the shown window
+  // starts inside that longer array. Indexing urban_mean_c directly
+  // by the slider/frame position (0..71) silently read the wrong
+  // hour's mean (off by frame_start_index), which is why it could
+  // show a city-mean temperature outside the map's own colour range
+  // for that hour — they were never talking about the same hour.
+  const frameStart = meta.frame_start_index || 0;
+
   function renderStats(i){
     const fr = frames[i];
     $time.textContent = `${fr.local} local · day ${fr.day}`;
     const u = meta.uhi;
-    if (u && u.urban_mean_c && u.urban_mean_c[i] != null) {
-      $cityMean.textContent = u.urban_mean_c[i].toFixed(1) + ' °C';
+    const j = frameStart + i;
+    if (u && u.urban_mean_c && u.urban_mean_c[j] != null) {
+      $cityMean.textContent = u.urban_mean_c[j].toFixed(1) + ' °C';
     }
   }
 
