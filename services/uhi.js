@@ -1,10 +1,10 @@
 /* ============================================================
    B-Kode — Live & Predictive UHI Dashboard demo.
-   Standalone (no build step, no map library): fetches
-   demo/forecast/index.json + demo/forecast/<city>/forecast.json,
-   scrubs through 12 six-hourly frames as a plain <img> swap
-   (frame_NNN.png / frame_uhi_NNN.png), same dark-basemap + glass-
-   overlay treatment as the SOLWEIG demo.
+   Real MapLibre map, ported from the dashboard's own forecast view
+   (frontend/js/app.js buildMap): a real OSM basemap with the hourly
+   forecast raster draped on top, building/tree context layers, an
+   AOI outline, and a scrub slider with play/pause. Absolute vs UHI-
+   contrast layers toggle by swapping the overlay image.
    ============================================================ */
 
 async function loadJSON(url){
@@ -12,38 +12,56 @@ async function loadJSON(url){
   if (!res.ok) throw new Error('failed to load ' + url);
   return res.json();
 }
-
-function field(label, id, options, sel){
-  return `<div class="svc-field">
-    <label for="${id}">${label}</label>
-    <select id="${id}">${options.map(o =>
-      `<option value="${o.v}"${o.v === sel ? ' selected' : ''}>${o.t}</option>`).join('')}</select>
-  </div>`;
-}
-
 function demoError(el){
   el.innerHTML = `<p class="svc-demo-loading">Demo data needs a local server —
     run <code>python -m http.server</code> in the repo root and open it over
     <code>http://localhost:8000</code> (opening the file directly won't fetch the JSON).</p>`;
 }
 
+const OSM_STYLE_LIGHT = {
+  version: 8,
+  sources: {
+    osm: {
+      type: 'raster', tileSize: 256,
+      tiles: ['https://a.tile.openstreetmap.org/{z}/{x}/{y}.png',
+              'https://b.tile.openstreetmap.org/{z}/{x}/{y}.png',
+              'https://c.tile.openstreetmap.org/{z}/{x}/{y}.png'],
+      attribution: '© OpenStreetMap',
+    },
+  },
+  layers: [
+    { id: 'bg', type: 'background', paint: { 'background-color': '#eef1f4' } },
+    { id: 'osm', type: 'raster', source: 'osm',
+      paint: { 'raster-opacity': 0.9, 'raster-saturation': -0.55,
+               'raster-contrast': -0.15, 'raster-brightness-min': 0.15 } },
+  ],
+};
+
 async function initUhiDemo(el){
-  let idx;
-  try { idx = await loadJSON('demo/forecast/index.json'); }
+  let meta;
+  const base = 'demo/forecast/dublin/';
+  try { meta = await loadJSON(base + 'meta.json'); }
   catch (e) { return demoError(el); }
 
-  const cityOpts = idx.cities.map(c => ({ v: c.id, t: c.label }));
+  const [w, s, e, n] = meta.overlay_bounds_wgs84;
+  const box = [[w, n], [e, n], [e, s], [w, s]];
+  const frames = meta.frames;
+  const ctx = meta.context || {};
 
   el.innerHTML = `
     <div class="uhi-toolbar">
-      ${field('City', 'uhiCity', cityOpts, idx.cities[0].id)}
       <div class="uhi-seg" data-mode>
         <button data-m="absolute" class="is-active">Absolute &deg;C</button>
         <button data-m="uhi">Heat contrast</button>
       </div>
     </div>
-    <div class="uhi-figure">
-      <img data-img alt="" />
+    <div class="uhi-stage">
+      <div class="uhi-map" data-map></div>
+      <div class="uhi-layers">
+        <label><input type="checkbox" data-layer="buildings" checked /> Buildings</label>
+        <label><input type="checkbox" data-layer="trees" checked /> Tree canopy</label>
+        <label><input type="checkbox" data-layer="aoi" checked /> Modelled area</label>
+      </div>
       <div class="uhi-time" data-time>&mdash;</div>
       <div class="uhi-stats">
         <div class="stat"><span class="lbl">Urban mean</span><span class="val" data-urban>&mdash;</span></div>
@@ -53,40 +71,46 @@ async function initUhiDemo(el){
     </div>
     <div class="uhi-scrub">
       <button type="button" data-play aria-label="Play / pause">&#9654;</button>
-      <input type="range" data-slider min="0" max="11" value="0" step="1" />
+      <input type="range" data-slider min="0" max="${frames.length - 1}" value="0" step="1" />
     </div>`;
 
-  const $city  = el.querySelector('#uhiCity');
   const $modeBtns = [...el.querySelectorAll('[data-mode] button')];
-  const $img   = el.querySelector('[data-img]');
-  const $time  = el.querySelector('[data-time]');
+  const $mapEl = el.querySelector('[data-map]');
+  const $time = el.querySelector('[data-time]');
   const $urban = el.querySelector('[data-urban]');
   const $rural = el.querySelector('[data-rural]');
-  const $uhi   = el.querySelector('[data-uhi]');
+  const $uhiVal = el.querySelector('[data-uhi]');
   const $slider = el.querySelector('[data-slider]');
-  const $play  = el.querySelector('[data-play]');
+  const $play = el.querySelector('[data-play]');
+  const $layerToggles = [...el.querySelectorAll('[data-layer]')];
 
-  let fc = null, mode = 'absolute', playTimer = null;
+  let mode = 'absolute', playTimer = null, map = null;
 
-  async function loadCity(){
-    fc = await loadJSON(`demo/forecast/${$city.value}/forecast.json`);
-    $slider.max = fc.frames.length - 1;
-    $slider.value = 0;
-    render();
+  function frameFile(i){
+    const pattern = meta.layers[mode].file; // e.g. "frame_{k:03d}.png"
+    const k = String(i).padStart(3, '0');
+    return pattern.replace('{k:03d}', k);
   }
 
-  function render(){
+  function renderStats(i){
+    const fr = frames[i];
+    $time.textContent = `${fr.local} local · day ${fr.day}`;
+    const u = meta.uhi;
+    if (u && u.urban_mean_c && u.urban_mean_c[i] != null) {
+      $urban.textContent = u.urban_mean_c[i].toFixed(1) + ' °C';
+      $rural.textContent = u.rural_mean_c[i].toFixed(1) + ' °C';
+      const uv = u.uhi_c[i];
+      $uhiVal.textContent = (uv >= 0 ? '+' : '') + uv.toFixed(2) + ' °C';
+    }
+  }
+
+  function updateOverlay(){
+    if (!map || !map.isStyleLoaded()) return;
     const i = +$slider.value;
-    const frame = fc.frames[i];
-    const idxNum = fc.frame_idx[i];
-    const padded = String(idxNum).padStart(3, '0');
-    const file = mode === 'uhi' ? `frame_uhi_${padded}.png` : `frame_${padded}.png`;
-    $img.src = `demo/forecast/${$city.value}/${file}`;
-    $img.alt = `${fc.label} forecast, ${frame.local}`;
-    $time.textContent = `${frame.local} local · day ${frame.day}`;
-    $urban.textContent = fc.urban_mean_c[i].toFixed(1) + ' °C';
-    $rural.textContent = fc.rural_mean_c[i].toFixed(1) + ' °C';
-    $uhi.textContent = (fc.uhi_c[i] >= 0 ? '+' : '') + fc.uhi_c[i].toFixed(2) + ' °C';
+    const url = base + frameFile(i);
+    const src = map.getSource('forecast');
+    if (src) src.updateImage({ url, coordinates: box });
+    renderStats(i);
   }
 
   function stopPlay(){
@@ -99,20 +123,67 @@ async function initUhiDemo(el){
       let n = +$slider.value + 1;
       if (n > +$slider.max) n = 0;
       $slider.value = n;
-      render();
-    }, 900);
+      updateOverlay();
+    }, 220);
   }
 
-  $city.addEventListener('change', () => { stopPlay(); loadCity(); });
+  function buildMap(){
+    map = new maplibregl.Map({
+      container: $mapEl,
+      style: JSON.parse(JSON.stringify(OSM_STYLE_LIGHT)),
+      bounds: [[w, s], [e, n]], fitBoundsOptions: { padding: 30 },
+      attributionControl: { compact: true }, dragRotate: false,
+    });
+    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
+    map.addControl(new maplibregl.ScaleControl({ maxWidth: 100, unit: 'metric' }), 'bottom-left');
+
+    map.on('load', () => {
+      map.addSource('forecast', { type: 'image', url: base + frameFile(0), coordinates: box });
+      map.addLayer({ id: 'forecast', type: 'raster', source: 'forecast',
+        paint: { 'raster-opacity': 0.85, 'raster-resampling': 'linear' } });
+
+      for (const key of ['trees', 'buildings']) {
+        if (!ctx[key]) continue;
+        const id = 'ctx-' + key;
+        map.addSource(id, { type: 'image', url: base + ctx[key].file, coordinates: box });
+        map.addLayer({ id, type: 'raster', source: id,
+          paint: { 'raster-opacity': key === 'trees' ? 0.7 : 0.9, 'raster-resampling': 'nearest' } });
+      }
+
+      loadJSON(base + 'aoi.geojson').then(aoi => {
+        map.addSource('aoi', { type: 'geojson', data: aoi });
+        map.addLayer({ id: 'aoi-halo', type: 'line', source: 'aoi',
+          paint: { 'line-color': '#ffffff', 'line-width': 6, 'line-opacity': 0.6 } });
+        map.addLayer({ id: 'aoi-line', type: 'line', source: 'aoi',
+          paint: { 'line-color': '#000000', 'line-width': 3 } });
+      }).catch(() => {});
+
+      renderStats(0);
+    });
+  }
+
   $modeBtns.forEach(b => b.addEventListener('click', () => {
     mode = b.dataset.m;
     $modeBtns.forEach(x => x.classList.toggle('is-active', x === b));
-    render();
+    updateOverlay();
   }));
-  $slider.addEventListener('input', () => { stopPlay(); render(); });
+  $slider.addEventListener('input', () => { stopPlay(); updateOverlay(); });
   $play.addEventListener('click', togglePlay);
+  $layerToggles.forEach(cb => cb.addEventListener('change', () => {
+    if (!map) return;
+    const key = cb.dataset.layer;
+    const id = key === 'aoi' ? null : 'ctx-' + key;
+    try {
+      if (key === 'aoi') {
+        ['aoi-halo', 'aoi-line'].forEach(l =>
+          map.getLayer(l) && map.setLayoutProperty(l, 'visibility', cb.checked ? 'visible' : 'none'));
+      } else if (map.getLayer(id)) {
+        map.setLayoutProperty(id, 'visibility', cb.checked ? 'visible' : 'none');
+      }
+    } catch (err) {}
+  }));
 
-  await loadCity();
+  buildMap();
 }
 
 document.addEventListener('DOMContentLoaded', () => {

@@ -1,7 +1,13 @@
-/* UHI dashboard demo — city select + a scrub slider over 12 forecast
-   frames, absolute-temperature vs UHI-contrast layer toggle. No map
-   library: an <img> swap over a dark basemap tone, same treatment as
-   the SOLWEIG demo. */
+/* UHI dashboard demo — real MapLibre map, ported from the
+   dashboard's own forecast view (frontend/js/app.js buildMap): a
+   real OSM basemap, the hourly forecast raster draped on top,
+   building/tree context layers, AOI outline, and a scrub slider
+   with play/pause. */
+
+.svc-demo-wrap{
+  max-width: 70em;
+  margin: 0 0 3.5em;
+}
 
 .uhi-toolbar{
   display: flex;
@@ -31,25 +37,47 @@
   background: #f17773;
 }
 
-.uhi-figure{
+.uhi-stage{
   position: relative;
-  border: 1px solid #eee;
+  border: 1px solid var(--rule, #ddd);
   border-radius: 0.35em;
   overflow: hidden;
-  background: #2f333b;
+  background: #eef1f4;
 }
-.uhi-figure img{
-  display: block;
+.uhi-map{
   width: 100%;
-  height: auto;
-  max-height: 480px;
-  object-fit: cover;
-  background: #2f333b;
+  height: 520px;
 }
 
-.uhi-stats{
+.uhi-layers{
   position: absolute;
   top: 1em;
+  left: 1em;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4em;
+  padding: 0.65em 0.85em;
+  border-radius: 0.35em;
+  background: rgba(28, 31, 38, 0.85);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+.uhi-layers label{
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  font-size: 0.78em;
+  color: #fff;
+  cursor: pointer;
+}
+.uhi-layers input{ accent-color: var(--accent, #e97770); }
+
+.uhi-stats{
+  /* MapLibre's own zoom control docks top-right; give the card room
+     below it instead of overlapping (it would need ~2.6em clearance
+     at typical zoom-control size). */
+  position: absolute;
+  top: 4.2em;
   right: 1em;
   display: flex;
   flex-wrap: wrap;
@@ -117,9 +145,6 @@
 .uhi-scrub input[type="range"]{
   flex: 1 1 auto;
   accent-color: var(--accent, #e97770);
-  /* A default range track can render invisibly thin/transparent in
-     some browsers — draw an explicit track so the slider reads as
-     an interactive control, not a stray dot. */
   height: 0.35em;
   border-radius: 0.2em;
   background: var(--grey-2, #eee);
