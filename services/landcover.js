@@ -61,17 +61,24 @@ async function initLandcoverDemo(el){
   el.innerHTML = `
     <div class="lc-toolbar">
       ${field('Neighbourhood', 'lcHood', hoodOpts, meta.neighbourhoods[0].id)}
+      <label class="lc-layer-toggle"><input type="checkbox" data-citylctoggle checked /> Land cover</label>
     </div>
     <div class="lc-stage">
       <div class="lc-map" data-citymap></div>
-      <div class="lc-hint">Click an outlined neighbourhood for its 2 m classification.</div>
+      <div class="lc-hint">Full-city land cover, limited zoom. Click an outlined neighbourhood for its 2 m detail.</div>
+      <div class="lc-legend lc-legend--overview" data-citylegend></div>
     </div>
     <div class="lc-detail" data-detail hidden>
       <div class="lc-detail-head">
         <h3 data-detailtitle>—</h3>
         <button type="button" class="lc-close" data-close>Close &times;</button>
       </div>
-      <div class="lc-map" data-detailmap></div>
+      <div class="lc-detail-stage">
+        <div class="lc-map lc-map--detail" data-detailmap></div>
+        <label class="lc-layer-toggle lc-layer-toggle--detail">
+          <input type="checkbox" data-detaillctoggle checked /> Land cover
+        </label>
+      </div>
       <div class="lc-legend" data-legend></div>
     </div>`;
 
@@ -82,9 +89,14 @@ async function initLandcoverDemo(el){
   const $detailTitle = el.querySelector('[data-detailtitle]');
   const $close = el.querySelector('[data-close]');
   const $legend = el.querySelector('[data-legend]');
+  const $cityLegend = el.querySelector('[data-citylegend]');
+  const $cityLcToggle = el.querySelector('[data-citylctoggle]');
+  const $detailLcToggle = el.querySelector('[data-detaillctoggle]');
 
-  $legend.innerHTML = meta.classes.map(c =>
+  const legendHTML = meta.classes.map(c =>
     `<span class="swatch"><span class="dot" style="background:${c.color}"></span>${c.label}</span>`).join('');
+  $legend.innerHTML = legendHTML;
+  $cityLegend.innerHTML = legendHTML;
 
   let cityMap = null, detailMap = null;
   const byId = {};
@@ -105,11 +117,17 @@ async function initLandcoverDemo(el){
 
     cityMap.on('load', () => {
       try { cityMap.setLayoutProperty('osm', 'visibility', 'visible'); } catch (e) {}
+
+      // full-city land-cover overlay, under the neighbourhood outlines
+      cityMap.addSource('lc-full', { type: 'image', url: base + meta.full.file, coordinates: cornersFor(meta.full.bounds) });
+      cityMap.addLayer({ id: 'lc-full', type: 'raster', source: 'lc-full',
+        paint: { 'raster-opacity': 0.85, 'raster-resampling': 'nearest' } });
+
       const fc = { type: 'FeatureCollection',
         features: meta.neighbourhoods.map(h => boundsToPolygonFeature(h.bounds, { id: h.id, label: h.label })) };
       cityMap.addSource('hoods', { type: 'geojson', data: fc, promoteId: 'id' });
       cityMap.addLayer({ id: 'hood-fill', type: 'fill', source: 'hoods',
-        paint: { 'fill-color': '#2b7520', 'fill-opacity': 0.25 } });
+        paint: { 'fill-color': '#ffffff', 'fill-opacity': 0.06 } });
       cityMap.addLayer({ id: 'hood-glow', type: 'line', source: 'hoods',
         paint: { 'line-color': '#ffffff', 'line-width': 5, 'line-opacity': 0.5, 'line-blur': 1 } });
       cityMap.addLayer({ id: 'hood-line', type: 'line', source: 'hoods',
@@ -160,10 +178,17 @@ async function initLandcoverDemo(el){
       dm.addSource('lc', { type: 'image', url: base + h.file, coordinates: cornersFor(h.bounds) });
       dm.addLayer({ id: 'lc', type: 'raster', source: 'lc',
         paint: { 'raster-opacity': 0.92, 'raster-resampling': 'nearest' } });
+      dm.setLayoutProperty('lc', 'visibility', $detailLcToggle.checked ? 'visible' : 'none');
     });
   }
 
   $hood.addEventListener('change', () => openDetail($hood.value));
+  $cityLcToggle.addEventListener('change', () => {
+    try { cityMap.setLayoutProperty('lc-full', 'visibility', $cityLcToggle.checked ? 'visible' : 'none'); } catch (e) {}
+  });
+  $detailLcToggle.addEventListener('change', () => {
+    try { detailMap.setLayoutProperty('lc', 'visibility', $detailLcToggle.checked ? 'visible' : 'none'); } catch (e) {}
+  });
   $close.addEventListener('click', () => { $detail.hidden = true; });
 
   buildCityMap();

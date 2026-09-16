@@ -96,7 +96,17 @@ async function initSolweigDemo(el){
         </div>
         <p class="sw-detail-blurb" data-detailblurb></p>
         <div class="sw-scenario-seg" data-scenarioseg></div>
-        <div class="sw-map" data-detailmap></div>
+        <div class="sw-detail-stage">
+          <div class="sw-map" data-detailmap></div>
+          <label class="sw-layer-toggle">
+            <input type="checkbox" data-utcitoggle checked /> UTCI layer
+          </label>
+          <div class="sw-legend sw-legend--detail" data-detaillegend>
+            <span class="lbl" data-detaillabel>UTCI · this scenario</span>
+            <div class="bar" data-detaillegendbar></div>
+            <div class="ticks"><span data-detaillegendlo>—</span><span data-detaillegendhi>—</span></div>
+          </div>
+        </div>
       </div>
     </div>`;
 
@@ -114,8 +124,14 @@ async function initSolweigDemo(el){
   const $legendBar = el.querySelector('[data-legendbar]');
   const $legendLo = el.querySelector('[data-legendlo]');
   const $legendHi = el.querySelector('[data-legendhi]');
+  const $utciToggle = el.querySelector('[data-utcitoggle]');
+  const $detailLabel = el.querySelector('[data-detaillabel]');
+  const $detailLegendBar = el.querySelector('[data-detaillegendbar]');
+  const $detailLegendLo = el.querySelector('[data-detaillegendlo]');
+  const $detailLegendHi = el.querySelector('[data-detaillegendhi]');
 
   let story = null, cityMap = null, detailMap = null, scenarioId = 'present', openHood = null;
+  let utciVisible = true;
 
   function base(){ return `demo/solweig/${$city.value}/`; }
 
@@ -287,12 +303,29 @@ async function initSolweigDemo(el){
         dm.addLayer({ id: 'utci', type: 'raster', source: 'utci',
           paint: { 'raster-opacity': 0.9, 'raster-resampling': 'nearest' } }, before);
       }
+      try { dm.setLayoutProperty('utci', 'visibility', utciVisible ? 'visible' : 'none'); } catch (e) {}
     };
     if (dm.isStyleLoaded()) draw(); else dm.once('load', draw);
+    renderDetailLegend(sc);
+  }
+
+  function renderDetailLegend(sc){
+    const range = sc.utciNaturalRange || [20, 40];
+    const [lo, hi] = range;
+    const grad = HEX_RAMP.map((c, i) => `${c} ${((i / (HEX_RAMP.length - 1)) * 100).toFixed(0)}%`).join(', ');
+    $detailLegendBar.style.background = `linear-gradient(to right, ${grad})`;
+    $detailLegendLo.textContent = lo.toFixed(0) + ' °C';
+    $detailLegendHi.textContent = hi.toFixed(0) + ' °C';
+    $detailLabel.textContent = `UTCI · ${sc.label}`;
   }
 
   $city.addEventListener('change', loadCity);
   $close.addEventListener('click', () => { $detail.hidden = true; openHood = null; });
+  $utciToggle.addEventListener('change', () => {
+    utciVisible = $utciToggle.checked;
+    try { detailMap && detailMap.setLayoutProperty('utci', 'visibility', utciVisible ? 'visible' : 'none'); } catch (e) {}
+    $detailLegendBar.parentElement.style.opacity = utciVisible ? '1' : '0.35';
+  });
 
   await loadCity();
 }

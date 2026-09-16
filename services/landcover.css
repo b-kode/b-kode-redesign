@@ -43,6 +43,47 @@
   max-width: 16em;
 }
 
+.lc-layer-toggle{
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  font-size: 0.85em;
+  color: #717479;
+  cursor: pointer;
+  padding-bottom: 0.75em; /* align baseline with the select field */
+}
+.lc-layer-toggle input{ accent-color: var(--accent, #e97770); }
+
+.lc-layer-toggle--detail{
+  position: absolute;
+  top: 1em;
+  right: 4.2em;
+  padding: 0.5em 0.8em;
+  border-radius: 0.35em;
+  background: rgba(28, 31, 38, 0.85);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  color: #fff;
+  font-size: 0.78em;
+  z-index: 1;
+}
+
+.lc-detail-stage{ position: relative; }
+.lc-map--detail{ height: 520px; }
+
+/* legend as a glass overlay card on the overview map */
+.lc-legend--overview{
+  position: absolute;
+  right: 1em;
+  bottom: 1em;
+  max-width: 15em;
+  padding: 0.6em 0.9em;
+  border-radius: 0.35em;
+  background: rgba(28, 31, 38, 0.85);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
 .lc-detail{
   border-top: 1px solid var(--rule, #ddd);
   background: #1c1f26;

@@ -34,6 +34,37 @@
 }
 .sw-detail[hidden]{ display: none; }
 
+.sw-detail-stage{
+  position: relative;
+}
+.sw-layer-toggle{
+  /* Below MapLibre's own zoom control (top-right), not beside it —
+     a fixed em offset next to the control clipped/overlapped it at
+     some viewport widths, blocking real mouse clicks on the label. */
+  position: absolute;
+  top: 4.2em;
+  right: 1em;
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  padding: 0.5em 0.8em;
+  border-radius: 0.35em;
+  background: rgba(28, 31, 38, 0.85);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  color: #fff;
+  font-size: 0.78em;
+  cursor: pointer;
+  z-index: 1;
+}
+.sw-layer-toggle input{ accent-color: var(--accent, #e97770); }
+.sw-legend--detail{
+  position: absolute;
+  left: 1em;
+  bottom: 1em;
+  transition: opacity 0.2s ease;
+}
+
 .sw-detail-head{
   display: flex;
   align-items: baseline;

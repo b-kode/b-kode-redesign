@@ -115,6 +115,36 @@
   font-size: 0.85em;
 }
 
+.uhi-legend{
+  position: absolute;
+  right: 1em;
+  bottom: 1em;
+  padding: 0.6em 0.9em;
+  border-radius: 0.35em;
+  background: rgba(28, 31, 38, 0.85);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  color: #fff;
+  font-size: 0.75em;
+  max-width: 14em;
+}
+.uhi-legend .lbl{
+  display: block;
+  margin-bottom: 0.35em;
+  color: rgba(255,255,255,0.75);
+}
+.uhi-legend .bar{
+  width: 10em;
+  height: 0.6em;
+  border-radius: 0.3em;
+  margin-bottom: 0.3em;
+}
+.uhi-legend .ticks{
+  display: flex;
+  justify-content: space-between;
+  color: rgba(255,255,255,0.6);
+}
+
 .uhi-scrub{
   display: flex;
   align-items: center;

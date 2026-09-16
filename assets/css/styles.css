@@ -143,3 +143,12 @@
     font-size: 2.5em;
     color: #919499;
 }
+
+/* Who are we? team portraits are circular (.circular-image) — the
+   site's wrapper.style3 .image rule puts a white 10px square border
+   around every .image in a grey section, which looked fine on the
+   rectangular product/realisation tiles but boxes in an ugly white
+   square behind the round portraits now that this section is grey. */
+#Whoarewe ~ .container .image.featured {
+    border: 0;
+}
