@@ -1,39 +1,88 @@
-/* Land cover demo — neighbourhood picker over a static 2 m
-   classification raster, plus a class-colour legend. No map
-   library, same dark-basemap treatment as the SOLWEIG/UHI demos. */
+/* Land cover demo — real MapLibre map. Overview: central Amsterdam
+   with zoom capped to the modelled extent and the 4 neighbourhoods
+   outlined and clickable. Click one to open its real 2 m
+   classification raster on a real OSM basemap (same pattern as the
+   SOLWEIG city-map -> detail-map flow). */
 
-.lc-figure{
+.svc-demo-wrap{
+  max-width: 70em;
+  margin: 0 0 3.5em;
+}
+
+.lc-toolbar{
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1em 1.5em;
+  margin-bottom: 1em;
+}
+
+.lc-stage{
   position: relative;
   border: 1px solid var(--rule, #ddd);
   border-radius: 0.35em;
   overflow: hidden;
-  background: #2f333b;
+  background: #0b0f15;
 }
-.lc-figure img{
-  display: block;
+.lc-map{
   width: 100%;
-  height: auto;
-  max-height: 520px;
-  object-fit: cover;
-  background: #2f333b;
+  height: 460px;
 }
+
+.lc-hint{
+  position: absolute;
+  top: 1em;
+  left: 1em;
+  padding: 0.6em 0.9em;
+  border-radius: 0.35em;
+  background: rgba(28, 31, 38, 0.85);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  color: #fff;
+  font-size: 0.78em;
+  max-width: 16em;
+}
+
+.lc-detail{
+  border-top: 1px solid var(--rule, #ddd);
+  background: #1c1f26;
+  color: #fff;
+}
+.lc-detail[hidden]{ display: none; }
+.lc-detail-head{
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1em;
+  padding: 1em 1.25em 0.25em;
+}
+.lc-detail-head h3{ margin: 0; font-size: 1.1em; color: #fff; }
+.lc-detail-head .lc-close{
+  font-size: 0.75em;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: rgba(255,255,255,0.6);
+  cursor: pointer;
+  background: none;
+  border: 0;
+}
+.lc-detail-head .lc-close:hover{ color: #fff; }
 
 .lc-legend{
   display: flex;
   flex-wrap: wrap;
   gap: 0.5em 1.25em;
-  padding: 1em 1.25em;
-  border-top: 1px solid var(--rule, #ddd);
-  background: #fff;
+  padding: 0.75em 1.25em 1.25em;
+  font-size: 0.8em;
 }
 .lc-legend .swatch{
   display: inline-flex;
   align-items: center;
   gap: 0.5em;
-  font-size: 0.8em;
-  color: var(--heading, #484d55);
+  color: rgba(255,255,255,0.75);
 }
-.lc-legend .swatch .dot{
+.lc-legend .dot{
   width: 0.9em;
   height: 0.9em;
   border-radius: 0.2em;
