@@ -81,34 +81,46 @@ async function initSolweigDemo(el){
     </div>
     <div class="sw-stage">
       <div class="sw-map" data-citymap></div>
-      <div class="sw-city-scenario-seg" data-cityscenarioseg></div>
-      <div class="sw-stats" data-citystats hidden>
-        <span class="lbl">Typical-day mean UTCI</span>
-        <span data-cityrange>—</span>
+      <!-- All overlay cards stack top-left only — MapLibre's own
+           controls own the other 3 corners (zoom top-right, scale
+           bottom-left, attribution bottom-right), so nothing here
+           ever fights them for space. -->
+      <div class="sw-overlay-stack">
+        <div class="sw-stats" data-citystats hidden>
+          <span class="lbl">Typical-day mean UTCI</span>
+          <span data-cityrange>—</span>
+        </div>
+        <div class="sw-legend" data-legend hidden>
+          <span class="lbl" data-legendlabel>UTCI · typical day</span>
+          <div class="bar" data-legendbar></div>
+          <div class="ticks"><span data-legendlo>—</span><span data-legendhi>—</span></div>
+        </div>
       </div>
-      <div class="sw-legend" data-legend hidden>
-        <span class="lbl" data-legendlabel>UTCI · typical day</span>
-        <div class="bar" data-legendbar></div>
-        <div class="ticks"><span data-legendlo>—</span><span data-legendhi>—</span></div>
-      </div>
+    </div>
+    <!-- Scenario picker lives BELOW the map, never on top of it. -->
+    <div class="sw-city-scenario-seg" data-cityscenarioseg></div>
       <div class="sw-detail" data-detail hidden>
         <div class="sw-detail-head">
           <h3 data-detailtitle>—</h3>
           <button type="button" class="sw-close" data-close>Close &times;</button>
         </div>
         <p class="sw-detail-blurb" data-detailblurb></p>
-        <div class="sw-scenario-seg" data-scenarioseg></div>
         <div class="sw-detail-stage">
           <div class="sw-map" data-detailmap></div>
-          <label class="sw-layer-toggle">
-            <input type="checkbox" data-utcitoggle checked /> UTCI layer
-          </label>
-          <div class="sw-legend sw-legend--detail" data-detaillegend>
-            <span class="lbl" data-detaillabel>UTCI · this scenario</span>
-            <div class="bar" data-detaillegendbar></div>
-            <div class="ticks"><span data-detaillegendlo>—</span><span data-detaillegendhi>—</span></div>
+          <div class="sw-overlay-stack">
+            <label class="sw-layer-toggle">
+              <input type="checkbox" data-utcitoggle checked /> UTCI layer
+            </label>
+            <div class="sw-legend sw-legend--detail" data-detaillegend>
+              <span class="lbl" data-detaillabel>UTCI · this scenario</span>
+              <div class="bar" data-detaillegendbar></div>
+              <div class="ticks"><span data-detaillegendlo>—</span><span data-detaillegendhi>—</span></div>
+            </div>
           </div>
         </div>
+        <!-- Scenario picker lives BELOW the map, never on top of it —
+             same pattern as the city overview's picker above. -->
+        <div class="sw-scenario-seg" data-scenarioseg></div>
       </div>
     </div>`;
 

@@ -29,10 +29,22 @@
   height: 460px;
 }
 
-.lc-hint{
+/* Overview map's hint + legend stack in this one top-left column.
+   MapLibre's own controls own the top-right (zoom), bottom-left
+   (scale) and bottom-right (attribution) corners — nothing we draw
+   ever competes with them for space. */
+.lc-overlay-stack{
   position: absolute;
   top: 1em;
   left: 1em;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6em;
+  max-width: 16em;
+}
+
+.lc-hint{
   padding: 0.6em 0.9em;
   border-radius: 0.35em;
   background: rgba(28, 31, 38, 0.85);
@@ -40,7 +52,6 @@
   -webkit-backdrop-filter: blur(4px);
   color: #fff;
   font-size: 0.78em;
-  max-width: 16em;
 }
 
 .lc-layer-toggle{
@@ -95,30 +106,16 @@
 .lc-switch input:checked + .lc-switch-track::before{ transform: translateX(1.1em); }
 .lc-switch input:focus-visible + .lc-switch-track{ outline: 2px solid var(--accent, #e97770); outline-offset: 2px; }
 
+/* Normal bar BELOW the detail map — not an overlay on top of it, so
+   it can never compete with the map's own controls or popups. */
 .lc-layer-toggle--detail{
-  /* Bottom-right, clear of both the zoom control (top-right) and
-     the scale bar (bottom-left). */
-  position: absolute;
-  bottom: 1em;
-  right: 1em;
-  padding: 0.5em 0.8em;
-  border-radius: 0.35em;
-  background: rgba(28, 31, 38, 0.85);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  color: #fff;
-  font-size: 0.78em;
-  z-index: 1;
+  padding: 0.75em 0 0;
 }
 
 .lc-detail-stage{ position: relative; }
 .lc-map--detail{ height: 520px; }
 
-/* legend as a glass overlay card on the overview map */
 .lc-legend--overview{
-  position: absolute;
-  right: 1em;
-  bottom: 1em;
   max-width: 15em;
   padding: 0.6em 0.9em;
   border-radius: 0.35em;

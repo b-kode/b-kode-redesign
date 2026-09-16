@@ -77,8 +77,13 @@ async function initLandcoverDemo(el){
     </div>
     <div class="lc-stage">
       <div class="lc-map" data-citymap></div>
-      <div class="lc-hint">Full-city land cover, limited zoom. Click an outlined neighbourhood for its 2 m detail.</div>
-      <div class="lc-legend lc-legend--overview" data-citylegend></div>
+      <!-- Everything stacks top-left only — MapLibre's own controls
+           own the other 3 corners (zoom top-right, scale
+           bottom-left, attribution bottom-right). -->
+      <div class="lc-overlay-stack">
+        <div class="lc-hint">Full-city land cover, limited zoom. Click an outlined neighbourhood for its 2 m detail.</div>
+        <div class="lc-legend lc-legend--overview" data-citylegend></div>
+      </div>
     </div>
     <div class="lc-detail" data-detail hidden>
       <div class="lc-detail-head">
@@ -87,11 +92,12 @@ async function initLandcoverDemo(el){
       </div>
       <div class="lc-detail-stage">
         <div class="lc-map lc-map--detail" data-detailmap></div>
-        <label class="lc-layer-toggle lc-layer-toggle--detail">
-          <span class="lc-switch"><input type="checkbox" data-detaillctoggle checked /><span class="lc-switch-track"></span></span>
-          Land cover
-        </label>
       </div>
+      <!-- Toggle lives BELOW the detail map, not on top of it. -->
+      <label class="lc-layer-toggle lc-layer-toggle--detail">
+        <span class="lc-switch"><input type="checkbox" data-detaillctoggle checked /><span class="lc-switch-track"></span></span>
+        Land cover
+      </label>
       <div class="lc-legend" data-legend></div>
     </div>`;
 
