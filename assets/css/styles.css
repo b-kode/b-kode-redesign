@@ -144,6 +144,72 @@
     color: #919499;
 }
 
+/* Custom Study — the catch-all offer below the product grid. It isn't a
+   7th product (no demo, no screenshot), so instead of forcing it into a
+   .col-4 tile with an icon standing in for a missing photo, it gets its
+   own full-width band, centred as one calm closing statement rather than
+   a left-icon/right-button strip that reads like a banner ad. Neutral
+   slate tint (not the accent red/coral) so it reads as a footer-ish
+   closing note, not another hot "look at me" tile competing with the
+   product cards above it. */
+.custom-study-band {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    width: 100%;
+    margin: 3em 0 0;
+    padding: 2.4em 2em 2.6em;
+    border-radius: 0.5em;
+    background: linear-gradient(135deg, #f4f5f6 0%, #e9ebee 100%);
+    border: 1px solid #dde0e4;
+    box-sizing: border-box;
+}
+
+.custom-study-icon {
+    width: 3.2em;
+    height: 3.2em;
+    margin-bottom: 0.9em;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #ffffff;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+}
+.custom-study-icon i {
+    font-size: 1.4em;
+    color: #717479;
+}
+
+.custom-study-band h3 {
+    margin: 0 0 0.5em 0;
+    font-size: 1.15em;
+    letter-spacing: 0.03em;
+    color: #484d55;
+}
+.custom-study-band p {
+    margin: 0 0 1.4em 0;
+    color: #717479;
+    font-size: 0.95em;
+    line-height: 1.6em;
+}
+
+.custom-study-cta {
+    white-space: nowrap;
+    font-weight: 700;
+    font-size: 0.9em;
+    color: #fff;
+    background: #e97770;
+    padding: 0.75em 1.6em;
+    border-radius: 2em;
+    transition: background 0.2s ease;
+}
+.custom-study-cta:hover {
+    background: #f98780;
+    color: #fff;
+}
+
 /* Who are we? team portraits are circular (.circular-image) — the
    site's wrapper.style3 .image rule puts a white 10px square border
    around every .image in a grey section, which looked fine on the

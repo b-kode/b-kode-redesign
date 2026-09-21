@@ -7,7 +7,7 @@
 <html>
 
 	<head>
-		<title>B-Kode — Live &amp; Predictive UHI Dashboard</title>
+		<title>B-Kode — Heat Mapping Campaign</title>
 		<meta name="robots" content="noindex, nofollow" />
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
@@ -15,7 +15,8 @@
 		<link rel="stylesheet" href="../assets/css/styles.css">
 		<link rel="stylesheet" href="epw.css">
 		<link rel="stylesheet" href="vendor/maplibre-gl.css">
-		<link rel="stylesheet" href="uhi.css">
+		<link rel="stylesheet" href="solweig.css">
+		<link rel="stylesheet" href="heatmapping.css">
 		<link rel="icon" href="../images/kode_favicon.png">
 
 		<!-- Global site tag (gtag.js) - Google Analytics -->
@@ -68,66 +69,67 @@
 							<a class="svc-back" href="../index.html#Products">&larr; Back to products</a>
 
 							<div class="svc-hero">
-								<img class="svc-hero-img" src="../images/services/uhi.png"
-									alt="Live urban-heat forecast dashboard for Ghent" />
+								<img class="svc-hero-img" src="../images/services/heatmapping.png"
+									alt="Predicted vs recorded street-level air temperature over Ghent, traverse routes outlined" />
 								<div class="svc-hero-text">
-									<span class="svc-kicker">Live forecast</span>
-									<h1>Live &amp; Predictive UHI Dashboard</h1>
+									<span class="svc-kicker">Ground-truth campaign</span>
+									<h1>Heat Mapping Campaign</h1>
 								</div>
 							</div>
-							<p class="svc-hero-caption">Picture: downscaled ~50 m air-temperature forecast for a city (here Ghent), scrubable through the coming days.</p>
+							<p class="svc-hero-caption">Picture: Ghent traverse campaign &mdash; ML-predicted temperature (raster) with the recorded routes outlined on top, one shared &deg;C scale.</p>
 						</div>
 
 						<div class="svc-page">
 
 							<div class="svc-intro">
-								<p>A real-time and 72-hour predictive dashboard for high-resolution (50&ndash;100&nbsp;m) urban heat
-								islands. Optionally extended with historical or future (heatwave) UHI maps.</p>
+								<p>Bike- or car-mounted sensors trace a city's streets during a heat event, logging
+								time-drift-corrected air temperature every few metres. A land-cover-aware ML model
+								then predicts temperature everywhere in between, turning a handful of routes into
+								full spatial coverage.</p>
 							</div>
 
 							<div class="svc-block">
 								<h2>Strengths &amp; innovation</h2>
 								<ul class="svc-strengths">
 									<li>
-										<span class="pico"><i class="fas fa-bullseye"></i></span>
-										<span><strong>Accuracy</strong>Validated against station observations across the domain.</span>
+										<span class="pico"><i class="fas fa-thermometer-half"></i></span>
+										<span><strong>Ground-truthed</strong>Real, calibrated street-level readings — not a satellite proxy for air temperature.</span>
 									</li>
 									<li>
-										<span class="pico"><i class="fas fa-history"></i></span>
-										<span><strong>Long runs</strong>Runs over long continuous periods, not just single snapshots.</span>
+										<span class="pico"><i class="fas fa-route"></i></span>
+										<span><strong>Fast to deploy</strong>A single traverse campaign covers a whole city in a few hours per time-of-day.</span>
 									</li>
 									<li>
-										<span class="pico"><i class="fas fa-th"></i></span>
-										<span><strong>High resolution</strong>50&ndash;100 m grid across the whole city footprint.</span>
+										<span class="pico"><i class="fas fa-brain"></i></span>
+										<span><strong>ML-filled coverage</strong>Land-cover and built-form features predict temperature between and beyond the routes driven.</span>
 									</li>
 									<li>
-										<span class="pico"><i class="fas fa-map-marked-alt"></i></span>
-										<span><strong>Spatial factors</strong>Large set of spatial drivers: land cover, built form, water, greenery.</span>
+										<span class="pico"><i class="fas fa-check-double"></i></span>
+										<span><strong>Model validated against reality</strong>Predicted and recorded values share one colour scale, so agreement — or disagreement — is visible at a glance.</span>
 									</li>
 								</ul>
 							</div>
 
 							<div class="svc-block">
 								<blockquote class="svc-quote">
-									&ldquo;A forecast a day and a half ahead is enough time to open a cooling centre, warn
-									vulnerable residents and brace the grid &mdash; before the heat arrives.&rdquo;
-									<footer>On predictive urban heat</footer>
+									&ldquo;A satellite gives you surface temperature; a traverse campaign tells you what
+									people actually feel walking down the street.&rdquo;
+									<footer>On why ground-truth still matters</footer>
 								</blockquote>
 							</div>
 
 							<div class="svc-block">
 								<h2>Demo</h2>
-								<p>Real ~50&nbsp;m hourly air-temperature forecast for Dublin, 72&nbsp;hours
-								   ahead &mdash; scrub through the coming days on a real basemap, with
-								   building and tree-canopy context layers, and toggle between absolute
-								   temperature and the urban-heat-island contrast against the rural
-								   baseline.</p>
+								<p>A real traverse campaign: every recorded point (time-drift-corrected, "smoothed")
+								   plus the ML-predicted temperature raster filling the study area, both on one
+								   shared °C scale. Toggle each layer independently to compare model against
+								   ground truth.</p>
 							</div>
 
 						</div>
 
 						<div class="svc-demo-wrap">
-							<div id="uhiDemo">
+							<div id="heatmappingDemo">
 								<p class="svc-demo-loading">Loading demo data…</p>
 							</div>
 						</div>
@@ -137,8 +139,8 @@
 							<div class="svc-block">
 								<h2>Free request</h2>
 								<p class="svc-request">
-									Requests handled case by case &mdash; get in touch to discuss coverage for your city.
-									<a href="mailto:jonas@b-kode.be?subject=Discuss%20UHI%20dashboard%20coverage">Get in touch &rarr;</a>
+									No free request for this product — a traverse campaign requires field deployment.
+									<a href="mailto:jonas@b-kode.be?subject=Discuss%20a%20Heat%20Mapping%20Campaign">Discuss a campaign &rarr;</a>
 								</p>
 							</div>
 
@@ -197,7 +199,7 @@
 		<script src="../assets/js/main.js"></script>
 		<script src="https://kit.fontawesome.com/bdcf1cb699.js" crossorigin="anonymous"></script>
 		<script src="vendor/maplibre-gl.js"></script>
-		<script src="uhi.js"></script>
+		<script src="heatmapping.js"></script>
 
 	</body>
 </html>

@@ -11,6 +11,12 @@
 const HEX_RAMP = ["#ffffcc", "#ffeda0", "#fed976", "#feb24c", "#fd8d3c",
                   "#fc4e2a", "#e31a1c", "#bd0026", "#800026"];
 const SCEN_LABEL = { present: 'Present', '2050': '2050', '2090': '2090' };
+// Must match UTCI_GLOBAL_RANGE in pipeline/build_story.py — the fixed
+// domain the ramp is stretched over everywhere, so a colour means the same
+// °C in every scenario, neighbourhood, and city. Used as the fallback when
+// a story.json predates this range (older demo data without hexRange/
+// utciNaturalRange pinned to it).
+const UTCI_GLOBAL_RANGE = [26, 46];
 
 const OSM_STYLE = {
   version: 8,
@@ -61,7 +67,7 @@ function geojsonBounds(gj){
 function cornersFor(b){ return [[b[0], b[3]], [b[2], b[3]], [b[2], b[1]], [b[0], b[1]]]; }
 
 function hexRampExpr(range, scen){
-  const [lo, hi] = range || [30, 40];
+  const [lo, hi] = range || UTCI_GLOBAL_RANGE;
   const stops = [];
   HEX_RAMP.forEach((c, i) => stops.push(lo + ((hi - lo) * i) / (HEX_RAMP.length - 1), c));
   const val = ['coalesce', ['get', `utci_${scen}`], ['get', 'utci_present'], ['get', 'utci'], lo];
@@ -179,14 +185,11 @@ async function initSolweigDemo(el){
   }
 
   function renderLegend(){
-    // story.hexRanges gives a per-scenario [lo,hi] (present/2050/2090
-    // each have their own spread); story.hexRange is the shared
-    // fallback range used by hexRampExpr() to keep colours
-    // comparable across scenarios — show the scenario's own range on
-    // the legend ticks (what the colours actually span here) while
-    // the map itself still ramps on the shared scale.
-    const perScenario = (story.hexRanges && story.hexRanges[cityScenarioId]) || story.hexRange || [30, 40];
-    const [lo, hi] = perScenario;
+    // story.hexRange is the FIXED global range the map is painted on
+    // (same for every scenario/hood/city — see UTCI_GLOBAL_RANGE in
+    // build_story.py), so the legend ticks always match what the
+    // colours actually mean, and stay identical across scenarios.
+    const [lo, hi] = story.hexRange || UTCI_GLOBAL_RANGE;
     const grad = HEX_RAMP.map((c, i) => `${c} ${((i / (HEX_RAMP.length - 1)) * 100).toFixed(0)}%`).join(', ');
     $legendBar.style.background = `linear-gradient(to right, ${grad})`;
     $legendLo.textContent = lo.toFixed(0) + ' °C';
@@ -351,11 +354,16 @@ async function initSolweigDemo(el){
       try { dm.setLayoutProperty('utci', 'visibility', utciVisible ? 'visible' : 'none'); } catch (e) {}
     };
     if (dm.isStyleLoaded()) draw(); else dm.once('load', draw);
-    renderDetailLegend(sc);
+    renderDetailLegend(h, sc);
   }
 
-  function renderDetailLegend(sc){
-    const range = sc.utciNaturalRange || [20, 40];
+  function renderDetailLegend(h, sc){
+    // h.utciRange is the FIXED global range the PNG was actually painted
+    // on (see UTCI_GLOBAL_RANGE in build_story.py) — show that, not
+    // sc.utciNaturalRange (the scenario's own 2–98 percentile), so the
+    // legend always matches what the colours mean and stays identical
+    // across scenarios/neighbourhoods/cities.
+    const range = h.utciRange || sc.utciNaturalRange || UTCI_GLOBAL_RANGE;
     const [lo, hi] = range;
     const grad = HEX_RAMP.map((c, i) => `${c} ${((i / (HEX_RAMP.length - 1)) * 100).toFixed(0)}%`).join(', ');
     $detailLegendBar.style.background = `linear-gradient(to right, ${grad})`;

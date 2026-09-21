@@ -1,0 +1,62 @@
+/* Heat Mapping Campaign demo — layer-toggle panel.
+   solweig.css's .sw-layer-toggle is a single floating chip, fine for one
+   toggle; with three (predicted / points / basemap) that pattern reads as
+   three near-identical small boxes stacked against a busy raster, easy to
+   miss. This groups them into one clearly-bordered card with a title,
+   bigger checkboxes, a colour swatch per layer, and a hover state. */
+.hm-layers{
+  padding: 0.7em 0.9em 0.6em;
+  border-radius: 0.35em;
+  border: 1px solid rgba(255,255,255,0.18);
+  background: rgba(15, 17, 22, 0.92);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+.hm-layers-title{
+  display: block;
+  font-size: 0.68em;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: rgba(255,255,255,0.55);
+  margin-bottom: 0.5em;
+}
+.hm-layer-toggle{
+  display: flex;
+  align-items: center;
+  gap: 0.55em;
+  padding: 0.4em 0.3em;
+  margin: 0 -0.3em;
+  border-radius: 0.3em;
+  color: #fff;
+  font-size: 0.82em;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.hm-layer-toggle:hover{
+  background: rgba(255,255,255,0.08);
+}
+.hm-layer-toggle input{
+  width: 1.15em;
+  height: 1.15em;
+  accent-color: var(--accent, #e97770);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.hm-swatch{
+  width: 0.85em;
+  height: 0.85em;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.25);
+}
+.hm-swatch--raster{
+  background: linear-gradient(135deg, #74add1, #fdae61, #a50026);
+}
+.hm-swatch--points{
+  background: #fdae61;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.5);
+}
+.hm-swatch--basemap{
+  background: #4a5568;
+}
