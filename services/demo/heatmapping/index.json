@@ -1,0 +1,11 @@
+{
+  "product": "heatmapping",
+  "cities": [
+    {
+      "id": "Ghent_14082026",
+      "city": "Ghent",
+      "period": "14082026",
+      "label": "Ghent \u2014 14 Aug 2026"
+    }
+  ]
+}

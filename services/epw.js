@@ -23,10 +23,27 @@ function field(label, id, options, sel){
 
 const fmt1 = n => (n >= 0 ? '' : '−') + Math.abs(n).toFixed(1);
 
+/* Catmull-Rom -> cubic Bezier smoothing, so monthly points read as a
+   climate curve rather than a jagged polyline. */
+function smoothPath(pts){
+  if (pts.length < 3) return pts.map((p, i) => `${i ? 'L' : 'M'}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join('');
+  let d = `M${pts[0][0].toFixed(1)},${pts[0][1].toFixed(1)}`;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[i - 1] || pts[i];
+    const p1 = pts[i];
+    const p2 = pts[i + 1];
+    const p3 = pts[i + 2] || p2;
+    const c1x = p1[0] + (p2[0] - p0[0]) / 6, c1y = p1[1] + (p2[1] - p0[1]) / 6;
+    const c2x = p2[0] - (p3[0] - p1[0]) / 6, c2y = p2[1] - (p3[1] - p1[1]) / 6;
+    d += `C${c1x.toFixed(1)},${c1y.toFixed(1)} ${c2x.toFixed(1)},${c2y.toFixed(1)} ${p2[0].toFixed(1)},${p2[1].toFixed(1)}`;
+  }
+  return d;
+}
+
 /* generic line/band chart (inline SVG, no libs) */
 function lineChart(series, opt){
   opt = opt || {};
-  const W = 760, H = 300, m = { l: 44, r: 14, t: 14, b: 34 };
+  const W = 760, H = 320, m = { l: 46, r: 18, t: 20, b: 38 };
   const iw = W - m.l - m.r, ih = H - m.t - m.b;
   const n = series[0].values.length;
   let lo = Infinity, hi = -Infinity;
@@ -36,47 +53,62 @@ function lineChart(series, opt){
     });
   });
   if (opt.y0 != null) lo = Math.min(lo, opt.y0);
-  const pad = (hi - lo) * 0.08 || 1; lo -= pad; hi += pad;
+  const pad = (hi - lo) * 0.12 || 1; lo -= pad; hi += pad;
   const X = i => m.l + (n === 1 ? iw / 2 : iw * i / (n - 1));
   const Y = v => m.t + ih * (1 - (v - lo) / (hi - lo));
-  const path = vals => vals.map((v, i) => `${i ? 'L' : 'M'}${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join('');
+  const pts = vals => vals.map((v, i) => [X(i), Y(v)]);
 
   const ticks = 4;
   const yGrid = Array.from({ length: ticks + 1 }, (_, i) => {
     const v = lo + (hi - lo) * i / ticks;
-    return `<line x1="${m.l}" y1="${Y(v).toFixed(1)}" x2="${W - m.r}" y2="${Y(v).toFixed(1)}" stroke="#eee"/>
-            <text x="${m.l - 8}" y="${Y(v).toFixed(1)}" text-anchor="end" dominant-baseline="middle"
-                  font-size="11" fill="#919499">${v.toFixed(0)}</text>`;
+    const y = Y(v).toFixed(1);
+    return `<line class="sc-grid" x1="${m.l}" y1="${y}" x2="${W - m.r}" y2="${y}"/>
+            <text class="sc-axis" x="${m.l - 10}" y="${y}" text-anchor="end" dominant-baseline="middle">${v.toFixed(0)}</text>`;
   }).join('');
 
   const xLabels = (opt.xLabels || []).map((lb, i) => lb == null ? '' :
-    `<text x="${X(i).toFixed(1)}" y="${H - 10}" text-anchor="middle" font-size="11" fill="#919499">${lb}</text>`
+    `<text class="sc-axis" x="${X(i).toFixed(1)}" y="${H - 12}" text-anchor="middle">${lb}</text>`
   ).join('');
 
-  const areas = series.filter(s => s.area).map(s => {
-    const top = s.area.hi.map((v, i) => `${i ? 'L' : 'M'}${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join('');
-    const bot = s.area.lo.map((v, i) => `L${X(n - 1 - i).toFixed(1)},${Y(s.area.lo[n - 1 - i]).toFixed(1)}`).join('');
-    return `<path d="${top}${bot}Z" fill="${s.color}" opacity="0.13"/>`;
+  const defs = series.map((s, i) => `
+    <linearGradient id="scFill${i}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="${s.color}" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="${s.color}" stop-opacity="0.02"/>
+    </linearGradient>`).join('');
+
+  const areas = series.map((s, i) => {
+    if (!s.area) return '';
+    const top = smoothPath(pts(s.area.hi));
+    const botPts = s.area.lo.map((v, j) => [X(n - 1 - j), Y(s.area.lo[n - 1 - j])]);
+    const bot = smoothPath(botPts).replace(/^M/, 'L');
+    return `<path class="sc-band" d="${top}${bot}Z" fill="url(#scFill${i})"/>`;
   }).join('');
 
   const lines = series.map(s =>
-    `<path d="${path(s.values)}" fill="none" stroke="${s.color}" stroke-width="2.5"
-       ${s.dash ? `stroke-dasharray="${s.dash}"` : ''} stroke-linejoin="round"/>`
+    `<path d="${smoothPath(pts(s.values))}" fill="none" stroke="${s.color}" stroke-width="2.75"
+       ${s.dash ? `stroke-dasharray="${s.dash}"` : ''} stroke-linecap="round" stroke-linejoin="round"/>`
+  ).join('');
+
+  const dots = series.map(s =>
+    pts(s.values).map(([x, y]) =>
+      `<circle class="sc-dot" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="2.75" fill="#fff" stroke="${s.color}" stroke-width="2"/>`
+    ).join('')
   ).join('');
 
   const legend = series.map((s, i) =>
-    `<g transform="translate(${m.l + i * 150},0)">
-       <line x1="0" y1="6" x2="22" y2="6" stroke="${s.color}" stroke-width="3" ${s.dash ? `stroke-dasharray="${s.dash}"` : ''}/>
-       <text x="28" y="10" font-size="12" fill="#484d55">${s.name}</text>
-     </g>`).join('');
+    `<span class="sc-legend-item">
+       <svg width="22" height="10" viewBox="0 0 22 10"><line x1="1" y1="5" x2="21" y2="5" stroke="${s.color}" stroke-width="3" ${s.dash ? `stroke-dasharray="${s.dash}"` : ''} stroke-linecap="round"/></svg>
+       <span>${s.name}</span>
+     </span>`).join('');
 
   return `
-    <div class="svc-legend"><svg viewBox="0 0 ${W} 16" width="100%" height="16">${legend}</svg></div>
-    <svg viewBox="0 0 ${W} ${H}" width="100%" preserveAspectRatio="xMidYMid meet" role="img"
+    <div class="sc-legend">${legend}</div>
+    <svg class="sc-svg" viewBox="0 0 ${W} ${H}" width="100%" preserveAspectRatio="xMidYMid meet" role="img"
          aria-label="${opt.aria || 'chart'}">
-      ${yGrid}${areas}${lines}${xLabels}
-      ${opt.yTitle ? `<text x="12" y="${m.t + ih / 2}" transform="rotate(-90 12 ${m.t + ih / 2})"
-         text-anchor="middle" font-size="11" fill="#919499">${opt.yTitle}</text>` : ''}
+      <defs>${defs}</defs>
+      ${yGrid}${areas}${lines}${dots}${xLabels}
+      ${opt.yTitle ? `<text class="sc-ytitle" x="14" y="${m.t + ih / 2}" transform="rotate(-90 14 ${m.t + ih / 2})"
+         text-anchor="middle">${opt.yTitle}</text>` : ''}
     </svg>`;
 }
 
@@ -174,7 +206,117 @@ async function initEpwDemo(el){
   render();
 }
 
+/* ============================================================
+   Request form — free (historical) vs paid (future/CMIP6) split.
+   Field logic ported from X-GenWeather-Portal's Streamlit form
+   (github.com/JonasBlancke/X-GenWeather-Portal): historical AMY/TMY
+   is free, future TMY/XMY needs a CMIP6 run and is paid, UHI
+   correction needs an LCZ. No backend here, so submission builds a
+   pre-filled mailto with the same structured summary that portal
+   posted as YAML, instead of a Formspree endpoint.
+   ============================================================ */
+function initEpwRequestForm(form){
+  const $amyYear = form.querySelector('#reqAmyYear');
+  const $tmyStart = form.querySelector('#reqTmyStart');
+  const $tmyEnd = form.querySelector('#reqTmyEnd');
+  const $futStart = form.querySelector('#reqFutStart');
+  const $futEnd = form.querySelector('#reqFutEnd');
+  const $scenarioType = form.querySelector('#reqScenarioType');
+  const $gwlField = form.querySelector('[data-gwl-field]');
+  const $sspField = form.querySelector('[data-ssp-field]');
+  const $histBoxes = [...form.querySelectorAll('[data-hist]')];
+  const $futBoxes = [...form.querySelectorAll('[data-fut]')];
+  const $amySub = form.querySelector('[data-amy-sub]');
+  const $tmySub = form.querySelector('[data-tmy-sub]');
+  const $xmyBox = form.querySelector('input[value="XMY"]');
+  const $xmySub = form.querySelector('[data-xmy-sub]');
+  const $uhi = form.querySelector('#reqUhi');
+  const $lczField = form.querySelector('[data-lcz-field]');
+  const $costNote = form.querySelector('[data-cost-note]');
+
+  const thisYear = new Date().getFullYear();
+  const years = (from, to) => Array.from({ length: to - from + 1 }, (_, i) => to - i);
+  $amyYear.innerHTML = years(1960, thisYear).map(y => `<option${y === thisYear - 1 ? ' selected' : ''}>${y}</option>`).join('');
+  const fillYearSelect = ($sel, from, to, def) => {
+    $sel.innerHTML = years(from, to).reverse().map(y => `<option${y === def ? ' selected' : ''}>${y}</option>`).join('');
+  };
+  fillYearSelect($tmyStart, 1960, thisYear, 1990);
+  fillYearSelect($tmyEnd, 1960, thisYear, 2020);
+  fillYearSelect($futStart, 2015, 2100, 2031);
+  fillYearSelect($futEnd, 2015, 2100, 2050);
+
+  function syncVisibility(){
+    $amySub.hidden = !form.querySelector('input[value="AMY"]').checked;
+    $tmySub.hidden = !form.querySelector('input[value="TMY"][data-hist]').checked;
+    $gwlField.hidden = $scenarioType.value !== 'gwl';
+    $sspField.hidden = $scenarioType.value === 'gwl';
+    $xmySub.hidden = !$xmyBox.checked;
+    $lczField.hidden = !$uhi.checked;
+    updateCostNote();
+  }
+
+  function updateCostNote(){
+    const histOn = $histBoxes.some(b => b.checked);
+    const futOn = $futBoxes.some(b => b.checked);
+    if (futOn && histOn) {
+      $costNote.innerHTML = '<strong>Mixed request</strong> — historical part is free, future part is quoted after review.';
+    } else if (futOn) {
+      $costNote.innerHTML = '<strong>Paid request</strong> — future EPW needs a CMIP6 model run, quoted per city/scenario.';
+    } else if (histOn) {
+      $costNote.innerHTML = 'Historical-only request — <strong>free</strong>.';
+    } else {
+      $costNote.textContent = 'Select at least one historical or future output.';
+    }
+  }
+
+  form.addEventListener('change', syncVisibility);
+  syncVisibility();
+
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const name = form.querySelector('#reqName').value.trim();
+    const email = form.querySelector('#reqEmail').value.trim();
+    const lat = form.querySelector('#reqLat').value.trim();
+    const lon = form.querySelector('#reqLon').value.trim();
+    const notes = form.querySelector('#reqNotes').value.trim();
+
+    const histSel = $histBoxes.filter(b => b.checked).map(b => b.value);
+    const futSel = $futBoxes.filter(b => b.checked).map(b => b.value);
+
+    const lines = [
+      `Project / client: ${name || '/'}`,
+      `Email: ${email || '/'}`,
+      `Location: ${lat || '?'}, ${lon || '?'}`,
+      '',
+      `Historical EPW (FREE): ${histSel.length ? histSel.join(', ') : 'none'}`,
+    ];
+    if (histSel.includes('AMY')) lines.push(`  AMY year: ${$amyYear.value}`);
+    if (histSel.includes('TMY')) lines.push(`  TMY reference period: ${$tmyStart.value}-${$tmyEnd.value}`);
+
+    lines.push('', `Future EPW (PAID): ${futSel.length ? futSel.join(', ') : 'none'}`);
+    if (futSel.length) {
+      if ($scenarioType.value === 'gwl') {
+        lines.push(`  Scenario: GWL ${form.querySelector('#reqGwl').value}`);
+      } else {
+        lines.push(`  Scenario: ${form.querySelector('#reqSsp').value.toUpperCase()}, period ${$futStart.value}-${$futEnd.value}`);
+      }
+      if (futSel.includes('XMY')) {
+        lines.push(`  Extreme metric: ${form.querySelector('#reqXmyMetric').value}, return period ${form.querySelector('#reqXmyReturn').value}y`);
+      }
+    }
+
+    lines.push('', `UHI correction: ${$uhi.checked ? 'yes (LCZ ' + form.querySelector('#reqLcz').value + ')' : 'no'}`);
+    if (notes) lines.push('', `Notes: ${notes}`);
+
+    const subject = encodeURIComponent(`EPW request — ${name || 'unnamed project'}`);
+    const body = encodeURIComponent(lines.join('\n'));
+    window.location.href = `mailto:jonas@b-kode.be?subject=${subject}&body=${body}`;
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   const el = document.getElementById('epwDemo');
   if (el) initEpwDemo(el);
+  const form = document.getElementById('epwReqForm');
+  if (form) initEpwRequestForm(form);
 });

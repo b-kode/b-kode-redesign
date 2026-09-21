@@ -215,21 +215,44 @@
 
 .svc-demo-figure{
   border: 1px solid var(--rule);
-  border-radius: 0.35em;
+  border-radius: 0.5em;
   overflow: hidden;
   background: #fff;
+  box-shadow: 0 1px 2px rgba(47,51,59,0.04);
 }
 .svc-demo-figure svg{ width: 100%; height: auto; display: block; }
-.svc-demo-figure > [data-fig]{ padding: 1em 0.75em 0.25em; }
+.svc-demo-figure > [data-fig]{ padding: 1.5em 1.25em 0.5em; }
 .svc-demo-caption{
-  padding: 0.75em 1.25em;
+  padding: 0.9em 1.5em;
   font-size: 0.85em;
   color: var(--text);
   border-top: 1px solid var(--rule);
   line-height: 1.5em;
+  background: var(--grey-3);
 }
 .svc-demo-caption strong{ color: var(--heading); }
-.svc-legend{ padding: 0.75em 0.75em 0; }
+
+/* ---- monthly climate chart ---- */
+.sc-legend{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4em 1.5em;
+  padding: 0 1.25em 0.9em;
+}
+.sc-legend-item{
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  font-size: 0.8em;
+  font-weight: 600;
+  color: var(--heading);
+}
+.sc-svg .sc-grid{ stroke: var(--grey-2); stroke-width: 1; shape-rendering: crispEdges; }
+.sc-svg .sc-axis{ font-size: 11px; fill: var(--text); font-weight: 600; }
+.sc-svg .sc-ytitle{ font-size: 11px; fill: var(--text); font-weight: 600; letter-spacing: 0.04em; }
+.sc-svg .sc-dot{ opacity: 0; transition: opacity 0.15s; }
+.sc-svg:hover .sc-dot{ opacity: 1; }
+.sc-svg .sc-band{ transition: opacity 0.15s; }
 
 .svc-demo-loading{
   color: var(--text);
@@ -261,3 +284,169 @@
   margin: 0;
 }
 .svc-request a{ color: var(--accent); font-weight: 700; }
+
+/* ---- EPW request form: free (historical) vs paid (future/CMIP6)
+   split, modelled on X-GenWeather-Portal's field logic but restyled
+   entirely in the site's own .svc-* language — no external form
+   library, plain HTML submitted as a pre-filled mailto so nothing
+   needs a backend. ---- */
+.svc-req-intro{
+  font-size: 0.9em;
+  color: var(--heading);
+  line-height: 1.6em;
+  margin: 0 0 1.5em;
+}
+.svc-req-intro strong{ color: var(--accent); }
+
+.svc-req-form{
+  background: var(--grey-1);
+  border-radius: 0.5em;
+  padding: 1.75em;
+}
+.svc-req-row{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25em;
+  margin-bottom: 1.25em;
+}
+.svc-req-row .svc-field{ flex: 1 1 12em; }
+
+.svc-req-form .svc-field label{ color: var(--link); }
+.svc-req-form input[type="text"],
+.svc-req-form input[type="email"],
+.svc-req-form input[type="number"],
+.svc-req-form select,
+.svc-req-form textarea{
+  font-family: inherit;
+  font-size: 0.95em;
+  color: var(--heading);
+  background: #fff;
+  border: 0;
+  border-radius: 0.35em;
+  padding: 0.75em 1em;
+  box-shadow: inset 0 0 1px #a0a1a7;
+  width: 100%;
+}
+.svc-req-form select{
+  appearance: none; -webkit-appearance: none; -moz-appearance: none;
+  padding-right: 2.5em;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='%23919499' d='M4 6l4 4 4-4z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.9em center;
+  background-size: 0.9em;
+  cursor: pointer;
+}
+.svc-req-form input:focus,
+.svc-req-form select:focus,
+.svc-req-form textarea:focus{ outline: 2px solid var(--accent); }
+.svc-req-form textarea{ resize: vertical; }
+
+.svc-req-cols{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25em;
+  margin-bottom: 1.25em;
+}
+.svc-req-col{
+  background: #fff;
+  border-radius: 0.5em;
+  padding: 1.25em 1.35em;
+  border-top: 3px solid var(--rule);
+}
+.svc-req-col--free{ border-top-color: #6bb787; }
+.svc-req-col--paid{ border-top-color: var(--accent); }
+.svc-req-col-head{
+  display: flex;
+  align-items: center;
+  gap: 0.75em;
+  margin-bottom: 0.35em;
+}
+.svc-req-col-head h3{ font-size: 1em; margin: 0; color: var(--heading); }
+.svc-req-badge{
+  font-size: 0.65em;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  padding: 0.3em 0.7em;
+  border-radius: 1em;
+  color: #fff;
+}
+.svc-req-badge--free{ background: #6bb787; }
+.svc-req-badge--paid{ background: var(--accent); }
+.svc-req-col-sub{
+  font-size: 0.8em;
+  color: var(--text);
+  margin: 0 0 1em;
+  line-height: 1.5em;
+}
+
+.svc-req-check-list{ display: flex; flex-direction: column; gap: 0.6em; margin-bottom: 0.25em; }
+.svc-req-check{
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+  font-size: 0.85em;
+  color: var(--heading);
+  cursor: pointer;
+}
+.svc-req-check input{
+  accent-color: var(--accent);
+  width: 1.15em;
+  height: 1.15em;
+  flex: 0 0 auto;
+  border: 1.5px solid #a0a1a7;
+  border-radius: 0.2em;
+  cursor: pointer;
+}
+
+.svc-req-sub{ margin-top: 0.9em; }
+.svc-req-sub--extreme{ display: flex; gap: 1em; }
+.svc-req-sub--extreme .svc-field{ flex: 1; }
+.svc-req-range-label{
+  display: block;
+  font-size: 0.7em;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--text);
+  margin-bottom: 0.35em;
+}
+.svc-req-range-row{ display: flex; align-items: center; gap: 0.6em; }
+.svc-req-range-row select{ flex: 1; }
+.svc-req-range-row span{ color: var(--text); }
+
+.svc-req-uhi{ font-size: 0.9em; font-weight: 600; }
+
+.svc-req-submit-row{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1em;
+  margin-top: 0.5em;
+  padding-top: 1.25em;
+  border-top: 1px solid var(--rule);
+}
+.svc-req-cost-note{
+  font-size: 0.85em;
+  color: var(--text);
+  margin: 0;
+}
+.svc-req-cost-note strong{ color: var(--heading); }
+.svc-req-submit{
+  font-family: inherit;
+  font-size: 0.9em;
+  font-weight: 700;
+  color: #fff;
+  background: var(--accent);
+  border: 0;
+  border-radius: 0.35em;
+  padding: 0.85em 1.75em;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.svc-req-submit:hover{ background: var(--accent-hover); }
+
+@media (max-width: 46em){
+  .svc-req-cols{ grid-template-columns: 1fr; }
+}

@@ -1,0 +1,79 @@
+{
+  "product": "heatmapping",
+  "city": "Ghent",
+  "period": "14082026",
+  "label": "Ghent \u2014 14 Aug 2026",
+  "center": [
+    3.7405682851821043,
+    51.05568281003356
+  ],
+  "predicted": "predicted.png",
+  "predictedBounds": [
+    3.673345105108886,
+    51.02684614494115,
+    3.807791465255323,
+    51.08451947512596
+  ],
+  "points": "points.geojson",
+  "aoi": "aoi.geojson",
+  "tempField": "temp",
+  "range": [
+    24.9,
+    29.1
+  ],
+  "scaleFrom": "recorded",
+  "nPoints": 2162,
+  "localTimeRange": "20:57\u201322:48",
+  "ramp": [
+    {
+      "t": 0.0,
+      "rgb": [
+        49,
+        54,
+        149
+      ]
+    },
+    {
+      "t": 0.22,
+      "rgb": [
+        116,
+        173,
+        209
+      ]
+    },
+    {
+      "t": 0.48,
+      "rgb": [
+        255,
+        255,
+        191
+      ]
+    },
+    {
+      "t": 0.68,
+      "rgb": [
+        253,
+        174,
+        97
+      ]
+    },
+    {
+      "t": 0.85,
+      "rgb": [
+        215,
+        48,
+        39
+      ]
+    },
+    {
+      "t": 1.0,
+      "rgb": [
+        165,
+        0,
+        38
+      ]
+    }
+  ],
+  "predictorSource": "embedding",
+  "sourceTif": "G:\\Gedeelde drives\\B-Kode\\Projects\\Meteotracker\\data\\Ghent\\14082026\\ml_output\\run_sentinel_temp_norm_random_segments_20-50-100-200_469e6f43\\predicted_temp_norm_multi_buffer_s2.tif"
+}
