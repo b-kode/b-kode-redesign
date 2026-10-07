@@ -115,6 +115,63 @@
 .lc-detail-stage{ position: relative; }
 .lc-map--detail{ height: 520px; }
 
+/* 2D / 3D view switch — a segmented control next to the detail title,
+   not another on/off switch, since these are two different renderers
+   (MapLibre raster vs. MapLibre 3D extrusion) rather than a layer toggle. */
+.lc-view-switch{
+  display: inline-flex;
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.lc-view-switch button{
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: rgba(255,255,255,0.65);
+  font-size: 0.75em;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 0.4em 1em;
+  cursor: pointer;
+}
+.lc-view-switch button.is-active{
+  background: #2f7dd6;
+  color: #fff;
+}
+
+.lc-map--3d{
+  height: 520px;
+  position: relative;
+  background: #0b0f15;
+}
+.lc-map--3d-canvas{ position: absolute; inset: 0; }
+.lc-map--3d canvas{ outline: none; }
+.lc-3d-hint{
+  position: absolute;
+  bottom: 0.75em;
+  left: 0.75em;
+  z-index: 1;
+  padding: 0.4em 0.8em;
+  border-radius: 0.3em;
+  background: rgba(28, 31, 38, 0.85);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  color: rgba(255,255,255,0.75);
+  font-size: 0.72em;
+}
+.lc-3d-loading{
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255,255,255,0.6);
+  font-size: 0.85em;
+}
+.lc-3d-loading[hidden], .lc-3d-hint[hidden]{ display: none; }
+
 .lc-legend--overview{
   max-width: 15em;
   padding: 0.6em 0.9em;
