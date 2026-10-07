@@ -14,6 +14,7 @@
 		<link rel="stylesheet" href="../assets/css/main.css" />
 		<link rel="stylesheet" href="../assets/css/styles.css">
 		<link rel="stylesheet" href="epw.css">
+		<link rel="stylesheet" href="vendor/maplibre-gl.css">
 		<link rel="icon" href="../images/kode_favicon.png">
 
 		<!-- Global site tag (gtag.js) - Google Analytics -->
@@ -149,6 +150,14 @@
 										</div>
 									</div>
 
+									<div class="svc-field">
+										<label>Site location</label>
+										<div class="svc-req-map-wrap">
+											<div class="svc-req-map" id="reqLocMap"></div>
+											<p class="svc-req-map-hint">Click the map to drop a pin, or type coordinates directly below.</p>
+										</div>
+									</div>
+
 									<div class="svc-req-row">
 										<div class="svc-field">
 											<label for="reqLat">Latitude</label>
@@ -170,8 +179,8 @@
 											<p class="svc-req-col-sub">Derived from ERA5-Land reanalysis and local WMO stations.</p>
 
 											<div class="svc-req-check-list">
-												<label class="svc-req-check"><input type="checkbox" name="hist" value="AMY" data-hist> AMY &mdash; Actual Meteorological Year</label>
-												<label class="svc-req-check"><input type="checkbox" name="hist" value="TMY" data-hist checked> TMY &mdash; Typical Meteorological Year</label>
+												<label class="svc-req-check"><input type="checkbox" name="hist" value="AMY" data-hist><span class="svc-req-check-box"></span> AMY &mdash; Actual Meteorological Year</label>
+												<label class="svc-req-check"><input type="checkbox" name="hist" value="TMY" data-hist checked><span class="svc-req-check-box"></span> TMY &mdash; Typical Meteorological Year</label>
 											</div>
 
 											<div class="svc-field svc-req-sub" data-amy-sub hidden>
@@ -196,42 +205,28 @@
 											<p class="svc-req-col-sub">CMIP6 projections &mdash; quoted per city / scenario combination.</p>
 
 											<div class="svc-field">
-												<label for="reqScenarioType">Future scenario type</label>
-												<select id="reqScenarioType">
-													<option value="gwl">Global Warming Level (GWL)</option>
-													<option value="ssp" selected>Shared Socioeconomic Pathway (SSP)</option>
+												<label for="reqSsp">SSP scenario</label>
+												<select id="reqSsp">
+													<option value="ssp126">SSP1-2.6</option>
+													<option value="ssp245" selected>SSP2-4.5</option>
+													<option value="ssp370">SSP3-7.0</option>
+													<option value="ssp585">SSP5-8.5</option>
 												</select>
 											</div>
-											<div class="svc-field" data-gwl-field hidden>
-												<label for="reqGwl">GWL target</label>
-												<select id="reqGwl">
-													<option>1.5&deg;C</option><option>2.0&deg;C</option>
-													<option>3.0&deg;C</option><option>4.0&deg;C</option>
-												</select>
-											</div>
-											<div data-ssp-field>
-												<div class="svc-field">
-													<label for="reqSsp">SSP scenario</label>
-													<select id="reqSsp">
-														<option value="ssp126">SSP1-2.6</option>
-														<option value="ssp245" selected>SSP2-4.5</option>
-														<option value="ssp370">SSP3-7.0</option>
-														<option value="ssp585">SSP5-8.5</option>
-													</select>
-												</div>
-												<div class="svc-field svc-req-sub">
-													<label class="svc-req-range-label">Future period</label>
-													<div class="svc-req-range-row">
-														<select id="reqFutStart"></select>
-														<span>&ndash;</span>
-														<select id="reqFutEnd"></select>
-													</div>
+											<div class="svc-field svc-req-sub">
+												<label class="svc-req-range-label">Future period</label>
+												<div class="svc-req-range-row">
+													<select id="reqFutStart"></select>
+													<span>&ndash;</span>
+													<select id="reqFutEnd"></select>
 												</div>
 											</div>
 
 											<div class="svc-req-check-list">
-												<label class="svc-req-check"><input type="checkbox" name="fut" value="TMY" data-fut checked> Future TMY</label>
-												<label class="svc-req-check"><input type="checkbox" name="fut" value="XMY" data-fut> XMY &mdash; extreme event year</label>
+												<label class="svc-req-check"><input type="checkbox" name="fut" value="TMY" data-fut checked><span class="svc-req-check-box"></span> TMY &mdash; Typical Meteorological Year</label>
+												<label class="svc-req-check"><input type="checkbox" name="fut" value="DSY" data-fut><span class="svc-req-check-box"></span> DSY &mdash; Design Summer Year</label>
+												<label class="svc-req-check"><input type="checkbox" name="fut" value="XTMY" data-fut><span class="svc-req-check-box"></span> XTMY &mdash; extreme TMY</label>
+												<label class="svc-req-check"><input type="checkbox" name="fut" value="XDSY" data-fut><span class="svc-req-check-box"></span> XDSY &mdash; extreme DSY</label>
 											</div>
 											<div class="svc-req-sub svc-req-sub--extreme" data-xmy-sub hidden>
 												<div class="svc-field">
@@ -252,7 +247,7 @@
 
 									<div class="svc-req-row">
 										<label class="svc-req-check svc-req-uhi">
-											<input type="checkbox" id="reqUhi" checked>
+											<input type="checkbox" id="reqUhi" checked><span class="svc-req-check-box"></span>
 											Apply Urban Heat Island correction (Local Climate Zone &times; UWG)
 										</label>
 									</div>
@@ -342,6 +337,7 @@
 		<script src="../assets/js/util.js"></script>
 		<script src="../assets/js/main.js"></script>
 		<script src="https://kit.fontawesome.com/bdcf1cb699.js" crossorigin="anonymous"></script>
+		<script src="vendor/maplibre-gl.js"></script>
 		<script src="epw.js"></script>
 
 	</body>

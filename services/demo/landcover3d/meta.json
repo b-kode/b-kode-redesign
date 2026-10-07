@@ -1,0 +1,68 @@
+{
+ "neighbourhoods": [
+  {
+   "id": "1",
+   "label": "Museumkwartier & Vondelpark",
+   "bounds": [
+    4.876819283001113,
+    52.35488570371065,
+    4.890271437766382,
+    52.36311582344181
+   ],
+   "file": "1.json",
+   "counts": {
+    "buildings": 316,
+    "trees": 4557,
+    "landcover": 1254
+   }
+  },
+  {
+   "id": "2",
+   "label": "Amsterdam-Noord (NDSM)",
+   "bounds": [
+    4.903699527854075,
+    52.38186220727391,
+    4.916718518422966,
+    52.38985168022931
+   ],
+   "file": "2.json",
+   "counts": {
+    "buildings": 806,
+    "trees": 5957,
+    "landcover": 1373
+   }
+  },
+  {
+   "id": "3",
+   "label": "Jordaan",
+   "bounds": [
+    4.8663752129329065,
+    52.371995689467546,
+    4.8807418254460835,
+    52.38077929678297
+   ],
+   "file": "3.json",
+   "counts": {
+    "buildings": 424,
+    "trees": 4278,
+    "landcover": 1587
+   }
+  },
+  {
+   "id": "4",
+   "label": "Oosterdok & Plantage",
+   "bounds": [
+    4.9025684880079785,
+    52.367254947984975,
+    4.916526001002355,
+    52.37579790852463
+   ],
+   "file": "4.json",
+   "counts": {
+    "buildings": 356,
+    "trees": 2981,
+    "landcover": 1535
+   }
+  }
+ ]
+}

@@ -88,12 +88,22 @@ async function initLandcoverDemo(el){
     <div class="lc-detail" data-detail hidden>
       <div class="lc-detail-head">
         <h3 data-detailtitle>—</h3>
+        <div class="lc-view-switch" data-viewswitch>
+          <button type="button" data-view="2d">2D</button>
+          <button type="button" data-view="3d" class="is-active">3D</button>
+        </div>
         <button type="button" class="lc-close" data-close>Close &times;</button>
       </div>
       <div class="lc-detail-stage">
-        <div class="lc-map lc-map--detail" data-detailmap></div>
+        <div class="lc-map lc-map--detail" data-detailmap hidden></div>
+        <div class="lc-map lc-map--3d" data-detailmap3d>
+          <div class="lc-map--3d-canvas" data-detailmap3d-canvas></div>
+          <div class="lc-3d-loading" data-detail3dstatus>Loading 3D data…</div>
+          <div class="lc-3d-hint" data-detail3dhint hidden>Drag to rotate/tilt · scroll to zoom</div>
+        </div>
       </div>
-      <!-- Toggle lives BELOW the detail map, not on top of it. -->
+      <!-- Toggle lives BELOW the detail map, not on top of it. Applies
+           to whichever view (2D or 3D) is currently active. -->
       <label class="lc-layer-toggle lc-layer-toggle--detail">
         <span class="lc-switch"><input type="checkbox" data-detaillctoggle checked /><span class="lc-switch-track"></span></span>
         Land cover
@@ -104,6 +114,10 @@ async function initLandcoverDemo(el){
   const $hood = el.querySelector('#lcHood');
   const $cityMapEl = el.querySelector('[data-citymap]');
   const $detailMapEl = el.querySelector('[data-detailmap]');
+  const $detailMap3dEl = el.querySelector('[data-detailmap3d]');
+  const $detailMap3dCanvas = el.querySelector('[data-detailmap3d-canvas]');
+  const $detail3dStatus = el.querySelector('[data-detail3dstatus]');
+  const $detail3dHint = el.querySelector('[data-detail3dhint]');
   const $detail = el.querySelector('[data-detail]');
   const $detailTitle = el.querySelector('[data-detailtitle]');
   const $close = el.querySelector('[data-close]');
@@ -111,6 +125,7 @@ async function initLandcoverDemo(el){
   const $cityLegend = el.querySelector('[data-citylegend]');
   const $cityLcToggle = el.querySelector('[data-citylctoggle]');
   const $detailLcToggle = el.querySelector('[data-detaillctoggle]');
+  const $viewSwitch = el.querySelector('[data-viewswitch]');
 
   const legendHTML = meta.classes.map(c =>
     `<span class="swatch"><span class="dot" style="background:${c.color}"></span>${c.label}</span>`).join('');
@@ -176,13 +191,31 @@ async function initLandcoverDemo(el){
     });
   }
 
+  let currentView = '3d'; // 3D opens by default — it's the more compelling view for a first look
+  let currentHoodId = null;
+  let detail3dMap = null;
+  let detail3dGeneration = 0;
+  const detail3dCache = {}; // neighbourhood id -> cutout GeoJSON, fetched once
+
   function openDetail(id){
     const h = byId[id];
     if (!h) return;
     $hood.value = id;
     $detail.hidden = false;
     $detailTitle.textContent = h.label;
-    buildDetailMap(h);
+    currentHoodId = id;
+    // Only build whichever view is currently active — a MapLibre map
+    // initialized inside a hidden (0-size) container doesn't lay out
+    // correctly, so the inactive view is torn down here (not rebuilt)
+    // and picked back up lazily by setView() if the user switches to
+    // it later, so it never shows a stale previous neighbourhood.
+    if (currentView === '3d') {
+      if (detailMap) { try { detailMap.remove(); } catch (e) {} detailMap = null; }
+      buildDetail3d(h);
+    } else {
+      clearDetail3d();
+      buildDetailMap(h);
+    }
     $detail.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 
@@ -208,14 +241,157 @@ async function initLandcoverDemo(el){
     });
   }
 
+  /* --- 3D (MapLibre fill-extrusions) detail view ---------------------
+     Each neighbourhood's buildings/trees/land-cover are pre-vectorized
+     server-side using the full-resolution vectorization path (see
+     postprocessing/export_landcover3d_dashboard.py in the urbanscape repo).
+     Only the selected neighbourhood cutout is fetched and rendered.
+     This follows make_3d_visuals.py rather than the separate lite renderer. */
+  const LC3D_BASE = 'demo/landcover3d/';
+  function clearDetail3d(){
+    detail3dGeneration += 1;
+    if (detail3dMap) { detail3dMap.remove(); detail3dMap = null; }
+    $detailMap3dCanvas.replaceChildren();
+    $detail3dHint.hidden = true;
+  }
+
+  async function loadDetail3d(h){
+    if (!detail3dCache[h.id]) detail3dCache[h.id] = await loadJSON(LC3D_BASE + h.id + '.json');
+    return detail3dCache[h.id];
+  }
+
+  function addDetail3dLayers(map, data){
+    map.addSource('lc-3d-landcover', { type: 'geojson', data: data.landcover });
+    map.addLayer({
+      id: 'lc-3d-landcover', type: 'fill-extrusion', source: 'lc-3d-landcover',
+      paint: {
+        'fill-extrusion-color': ['get', 'LC_COLOR'],
+        'fill-extrusion-height': 0.3,
+        'fill-extrusion-opacity': 0.85,
+      },
+    });
+
+    map.addSource('lc-3d-buildings', { type: 'geojson', data: data.buildings });
+    map.addLayer({
+      id: 'lc-3d-buildings', type: 'fill-extrusion', source: 'lc-3d-buildings',
+      paint: {
+        'fill-extrusion-color': [
+          'interpolate', ['linear'], ['get', 'HEIGHT'],
+          0, 'lightgray', 20, 'gray', 40, 'darkgray',
+        ],
+        'fill-extrusion-height': ['get', 'HEIGHT'],
+        'fill-extrusion-opacity': 0.9,
+      },
+    });
+
+    map.addSource('lc-3d-trunks', { type: 'geojson', data: data.trees.trunks });
+    map.addLayer({
+      id: 'lc-3d-trunks', type: 'fill-extrusion', source: 'lc-3d-trunks',
+      paint: {
+        'fill-extrusion-color': '#6b4a2f',
+        'fill-extrusion-height': ['get', 'CANOPY_BASE'],
+        'fill-extrusion-opacity': 1,
+      },
+    });
+
+    map.addSource('lc-3d-canopies', { type: 'geojson', data: data.trees.canopies });
+    map.addLayer({
+      id: 'lc-3d-canopies', type: 'fill-extrusion', source: 'lc-3d-canopies',
+      paint: {
+        'fill-extrusion-color': [
+          'interpolate', ['linear'], ['get', 'HEIGHT'],
+          0, 'lightgreen', 10, 'green', 20, 'darkgreen',
+        ],
+        'fill-extrusion-base': ['get', 'CANOPY_BASE'],
+        'fill-extrusion-height': ['get', 'HEIGHT'],
+        'fill-extrusion-opacity': 0.85,
+      },
+    });
+  }
+
+  async function buildDetail3d(h){
+    clearDetail3d();
+    const generation = detail3dGeneration;
+    $detail3dStatus.textContent = 'Loading 3D data…';
+    $detail3dStatus.hidden = false;
+    let data;
+    try { data = await loadDetail3d(h); }
+    catch (e) {
+      if (generation !== detail3dGeneration) return;
+      $detail3dStatus.textContent = '3D data failed to load.';
+      console.error('Failed to load neighbourhood 3D data.', e);
+      return;
+    }
+    if (generation !== detail3dGeneration) return;
+
+    const [w, s, e, n] = h.bounds;
+    const map = new maplibregl.Map({
+      container: $detailMap3dCanvas,
+      style: JSON.parse(JSON.stringify(OSM_STYLE)),
+      bounds: [[w, s], [e, n]], fitBoundsOptions: { padding: 28 },
+      pitch: 55, bearing: 0, maxPitch: 70,
+      attributionControl: { compact: true },
+    });
+    detail3dMap = map;
+    map.addControl(new maplibregl.NavigationControl({ showCompass: true }), 'top-right');
+    map.on('load', () => {
+      if (generation !== detail3dGeneration) return;
+      addDetail3dLayers(map, data);
+      const visibility = $detailLcToggle.checked ? 'visible' : 'none';
+      ['lc-3d-landcover', 'lc-3d-buildings', 'lc-3d-trunks', 'lc-3d-canopies'].forEach((layerId) => {
+        map.setLayoutProperty(layerId, 'visibility', visibility);
+      });
+      $detail3dStatus.hidden = true;
+      $detail3dHint.hidden = false;
+    });
+    map.on('error', (event) => {
+      if (generation === detail3dGeneration && event.error) {
+        console.error('3D neighbourhood map failed.', event.error);
+      }
+    });
+  }
+
+  function setView(view){
+    currentView = view;
+    $viewSwitch.querySelectorAll('button').forEach(b => b.classList.toggle('is-active', b.dataset.view === view));
+    $detailMapEl.hidden = view !== '2d';
+    $detailMap3dEl.hidden = view !== '3d';
+    // The land-cover toggle applies to whichever view is active — not
+    // 2D-only — so it stays visible in both and just targets a
+    // different layer/map depending on currentView (see
+    // $detailLcToggle's change handler below).
+    if (!currentHoodId) return;
+    if (view === '3d') {
+      if (!detail3dMap) buildDetail3d(byId[currentHoodId]);
+    } else {
+      clearDetail3d();
+      if (!detailMap) buildDetailMap(byId[currentHoodId]);
+    }
+  }
+
+  $viewSwitch.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-view]');
+    if (btn) setView(btn.dataset.view);
+  });
+
   $hood.addEventListener('change', () => openDetail($hood.value));
   $cityLcToggle.addEventListener('change', () => {
     try { cityMap.setLayoutProperty('lc-full', 'visibility', $cityLcToggle.checked ? 'visible' : 'none'); } catch (e) {}
   });
   $detailLcToggle.addEventListener('change', () => {
-    try { detailMap.setLayoutProperty('lc', 'visibility', $detailLcToggle.checked ? 'visible' : 'none'); } catch (e) {}
+    const visibility = $detailLcToggle.checked ? 'visible' : 'none';
+    try { detailMap.setLayoutProperty('lc', 'visibility', visibility); } catch (e) {}
+    // In 3D this is the master "show the modelled scene" toggle, not
+    // just the ground land-cover layer — buildings and trees go with
+    // it, since turning it off is meant to leave the bare basemap.
+    ['lc-3d-landcover', 'lc-3d-buildings', 'lc-3d-trunks', 'lc-3d-canopies'].forEach((layerId) => {
+      try { detail3dMap.setLayoutProperty(layerId, 'visibility', visibility); } catch (e) {}
+    });
   });
-  $close.addEventListener('click', () => { $detail.hidden = true; });
+  $close.addEventListener('click', () => {
+    $detail.hidden = true;
+    clearDetail3d();
+  });
 
   buildCityMap();
 }

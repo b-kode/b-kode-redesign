@@ -210,29 +210,101 @@ async function initEpwDemo(el){
    Request form — free (historical) vs paid (future/CMIP6) split.
    Field logic ported from X-GenWeather-Portal's Streamlit form
    (github.com/JonasBlancke/X-GenWeather-Portal): historical AMY/TMY
-   is free, future TMY/XMY needs a CMIP6 run and is paid, UHI
-   correction needs an LCZ. No backend here, so submission builds a
-   pre-filled mailto with the same structured summary that portal
-   posted as YAML, instead of a Formspree endpoint.
+   is free (AMY = one specific year, TMY = a reference period), future
+   TMY/DSY/XTMY/XDSY needs a CMIP6 run (SSP scenario only) and is paid,
+   UHI correction needs an LCZ. Submits to Formspree (see
+   EPW_FORMSPREE_ENDPOINT below); falls back to a pre-filled mailto if
+   that isn't configured.
    ============================================================ */
+// Formspree endpoint for the EPW request form (form id myknozkr,
+// https://formspree.io/forms/myknozkr/overview) — submissions POST here
+// and land in the inbox configured on that Formspree form.
+const EPW_FORMSPREE_ENDPOINT = 'https://formspree.io/f/myknozkr';
+
+/* Pick-a-point map for the "Site location" field: click/drag a marker,
+   the #reqLat/#reqLon text inputs stay in sync either direction (typing
+   coordinates moves the marker too), so the map is a convenience on top
+   of the existing text fields, never a replacement that could lose a
+   typed-in value the map doesn't recognise. */
+function initLocationMap(form){
+  const mapEl = form.querySelector('#reqLocMap');
+  if (!mapEl || typeof maplibregl === 'undefined') return;
+  const $lat = form.querySelector('#reqLat');
+  const $lon = form.querySelector('#reqLon');
+
+  const map = new maplibregl.Map({
+    container: mapEl,
+    style: {
+      version: 8,
+      sources: {
+        osm: {
+          type: 'raster', tileSize: 256,
+          tiles: ['https://a.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                  'https://b.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                  'https://c.tile.openstreetmap.org/{z}/{x}/{y}.png'],
+          attribution: '© OpenStreetMap',
+        },
+      },
+      layers: [{ id: 'osm', type: 'raster', source: 'osm' }],
+    },
+    center: [10, 40], zoom: 1.4,
+    attributionControl: { compact: true },
+  });
+  map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
+
+  let marker = null;
+  function placeMarker(lng, lat, { fly = false } = {}){
+    if (marker) marker.setLngLat([lng, lat]);
+    else marker = new maplibregl.Marker({ draggable: true, color: '#e97770' })
+      .setLngLat([lng, lat]).addTo(map);
+    marker.on('dragend', () => {
+      const p = marker.getLngLat();
+      $lat.value = p.lat.toFixed(4);
+      $lon.value = p.lng.toFixed(4);
+    });
+    if (fly) map.flyTo({ center: [lng, lat], zoom: Math.max(map.getZoom(), 8) });
+  }
+
+  map.on('click', e => {
+    $lat.value = e.lngLat.lat.toFixed(4);
+    $lon.value = e.lngLat.lng.toFixed(4);
+    placeMarker(e.lngLat.lng, e.lngLat.lat);
+  });
+
+  // typing coordinates by hand also moves/creates the pin, so the two
+  // input methods never drift apart
+  function syncFromInputs(){
+    const lat = parseFloat($lat.value), lon = parseFloat($lon.value);
+    if (Number.isFinite(lat) && Number.isFinite(lon) &&
+        Math.abs(lat) <= 90 && Math.abs(lon) <= 180) {
+      placeMarker(lon, lat, { fly: true });
+    }
+  }
+  $lat.addEventListener('change', syncFromInputs);
+  $lon.addEventListener('change', syncFromInputs);
+
+  // pre-existing values (e.g. browser autofill / back-navigation)
+  if ($lat.value && $lon.value) map.once('load', syncFromInputs);
+}
+
 function initEpwRequestForm(form){
   const $amyYear = form.querySelector('#reqAmyYear');
   const $tmyStart = form.querySelector('#reqTmyStart');
   const $tmyEnd = form.querySelector('#reqTmyEnd');
   const $futStart = form.querySelector('#reqFutStart');
   const $futEnd = form.querySelector('#reqFutEnd');
-  const $scenarioType = form.querySelector('#reqScenarioType');
-  const $gwlField = form.querySelector('[data-gwl-field]');
-  const $sspField = form.querySelector('[data-ssp-field]');
   const $histBoxes = [...form.querySelectorAll('[data-hist]')];
   const $futBoxes = [...form.querySelectorAll('[data-fut]')];
   const $amySub = form.querySelector('[data-amy-sub]');
   const $tmySub = form.querySelector('[data-tmy-sub]');
-  const $xmyBox = form.querySelector('input[value="XMY"]');
+  // XTMY / XDSY are the "extreme" variants of TMY/DSY — either one needs
+  // the extreme-metric + return-period sub-fields; plain TMY/DSY don't.
+  const $xmyBoxes = [...form.querySelectorAll('input[value="XTMY"], input[value="XDSY"]')];
   const $xmySub = form.querySelector('[data-xmy-sub]');
   const $uhi = form.querySelector('#reqUhi');
   const $lczField = form.querySelector('[data-lcz-field]');
   const $costNote = form.querySelector('[data-cost-note]');
+  const $allCheckboxes = [...form.querySelectorAll('.svc-req-check input[type="checkbox"]')];
 
   const thisYear = new Date().getFullYear();
   const years = (from, to) => Array.from({ length: to - from + 1 }, (_, i) => to - i);
@@ -245,13 +317,18 @@ function initEpwRequestForm(form){
   fillYearSelect($futStart, 2015, 2100, 2031);
   fillYearSelect($futEnd, 2015, 2100, 2050);
 
+  initLocationMap(form);
+
   function syncVisibility(){
     $amySub.hidden = !form.querySelector('input[value="AMY"]').checked;
     $tmySub.hidden = !form.querySelector('input[value="TMY"][data-hist]').checked;
-    $gwlField.hidden = $scenarioType.value !== 'gwl';
-    $sspField.hidden = $scenarioType.value === 'gwl';
-    $xmySub.hidden = !$xmyBox.checked;
+    $xmySub.hidden = !$xmyBoxes.some(b => b.checked);
     $lczField.hidden = !$uhi.checked;
+    // :has() row-tint is CSS-native in current browsers; this class
+    // toggle is the fallback for anything older so "checked" is never
+    // silently invisible.
+    $allCheckboxes.forEach(cb =>
+      cb.closest('.svc-req-check').classList.toggle('is-checked', cb.checked));
     updateCostNote();
   }
 
@@ -272,8 +349,18 @@ function initEpwRequestForm(form){
   form.addEventListener('change', syncVisibility);
   syncVisibility();
 
-  form.addEventListener('submit', e => {
-    e.preventDefault();
+  const $submitBtn = form.querySelector('.svc-req-submit');
+  const $submitRow = form.querySelector('.svc-req-submit-row');
+  let $formStatus = form.querySelector('[data-form-status]');
+  if (!$formStatus) {
+    $formStatus = document.createElement('p');
+    $formStatus.className = 'svc-req-status';
+    $formStatus.setAttribute('data-form-status', '');
+    $formStatus.hidden = true;
+    $submitRow.after($formStatus);
+  }
+
+  function buildRequestLines(){
     const name = form.querySelector('#reqName').value.trim();
     const email = form.querySelector('#reqEmail').value.trim();
     const lat = form.querySelector('#reqLat').value.trim();
@@ -295,12 +382,8 @@ function initEpwRequestForm(form){
 
     lines.push('', `Future EPW (PAID): ${futSel.length ? futSel.join(', ') : 'none'}`);
     if (futSel.length) {
-      if ($scenarioType.value === 'gwl') {
-        lines.push(`  Scenario: GWL ${form.querySelector('#reqGwl').value}`);
-      } else {
-        lines.push(`  Scenario: ${form.querySelector('#reqSsp').value.toUpperCase()}, period ${$futStart.value}-${$futEnd.value}`);
-      }
-      if (futSel.includes('XMY')) {
+      lines.push(`  Scenario: ${form.querySelector('#reqSsp').value.toUpperCase()}, period ${$futStart.value}-${$futEnd.value}`);
+      if (futSel.includes('XTMY') || futSel.includes('XDSY')) {
         lines.push(`  Extreme metric: ${form.querySelector('#reqXmyMetric').value}, return period ${form.querySelector('#reqXmyReturn').value}y`);
       }
     }
@@ -308,9 +391,77 @@ function initEpwRequestForm(form){
     lines.push('', `UHI correction: ${$uhi.checked ? 'yes (LCZ ' + form.querySelector('#reqLcz').value + ')' : 'no'}`);
     if (notes) lines.push('', `Notes: ${notes}`);
 
-    const subject = encodeURIComponent(`EPW request — ${name || 'unnamed project'}`);
-    const body = encodeURIComponent(lines.join('\n'));
-    window.location.href = `mailto:jonas@b-kode.be?subject=${subject}&body=${body}`;
+    return { name, email, lat, lon, notes, histSel, futSel, lines };
+  }
+
+  function setStatus(kind, msg){
+    $formStatus.hidden = false;
+    $formStatus.textContent = msg;
+    $formStatus.className = 'svc-req-status svc-req-status--' + kind;
+  }
+
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    const { name, email, lines } = buildRequestLines();
+
+    // No Formspree endpoint configured yet — fall back to the mailto:
+    // draft-opener so the form still does SOMETHING useful meanwhile.
+    if (!EPW_FORMSPREE_ENDPOINT) {
+      const subject = encodeURIComponent(`EPW request — ${name || 'unnamed project'}`);
+      const body = encodeURIComponent(lines.join('\n'));
+      window.location.href = `mailto:jonas@b-kode.be?subject=${subject}&body=${body}`;
+      return;
+    }
+
+    $submitBtn.disabled = true;
+    $submitBtn.textContent = 'Sending…';
+    setStatus('pending', 'Sending your request…');
+
+    // Built explicitly (not FormData(form)) — this form's fields are
+    // plain #ids without name= attributes, so FormData(form) would pick
+    // up nothing; Formspree just needs a plain JSON payload.
+    const payload = {
+      _subject: `EPW request — ${name || 'unnamed project'}`,
+      name, email,
+      message: lines.join('\n'),
+    };
+
+    try {
+      const res = await fetch(EPW_FORMSPREE_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error('request failed');
+      form.hidden = true;
+      $formStatus.hidden = false;
+      $formStatus.className = 'svc-req-status svc-req-status--ok';
+      $formStatus.textContent = '';
+      $formStatus.append(
+        `Thanks${name ? ', ' + name : ''} — your EPW request has been sent. We'll follow up at ${email || 'the email you provided'} shortly. `);
+      const again = document.createElement('button');
+      again.type = 'button';
+      again.className = 'svc-req-again';
+      again.textContent = 'Send another request';
+      again.addEventListener('click', () => {
+        form.reset();
+        syncVisibility();
+        form.hidden = false;
+        $formStatus.hidden = true;
+        $submitBtn.disabled = false;
+        $submitBtn.textContent = 'Send request →';
+        form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+      $formStatus.appendChild(again);
+    } catch (err) {
+      $submitBtn.disabled = false;
+      $submitBtn.textContent = 'Send request →';
+      setStatus('error', `Something went wrong sending the request — email us directly instead: `);
+      const a = document.createElement('a');
+      a.href = `mailto:jonas@b-kode.be?subject=${encodeURIComponent('EPW request — ' + (name || 'unnamed project'))}&body=${encodeURIComponent(lines.join('\n'))}`;
+      a.textContent = 'jonas@b-kode.be';
+      $formStatus.appendChild(a);
+    }
   });
 }
 

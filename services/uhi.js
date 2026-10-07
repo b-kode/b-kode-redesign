@@ -186,12 +186,19 @@ async function initUhiDemo(el){
     }, 220);
   }
 
+  // The forecast/context layers are single-image overlays draped over
+  // the AOI (not a real tile pyramid) — past this zoom they're just the
+  // same raster pixels stretched larger and looking blurry, so cap how
+  // far in the visitor can go instead of "zooming into" fake detail.
+  const UHI_MAX_ZOOM = 15;
+
   function buildMap(){
     map = new maplibregl.Map({
       container: $mapEl,
       style: JSON.parse(JSON.stringify(OSM_STYLE_LIGHT)),
       bounds: [[w, s], [e, n]], fitBoundsOptions: { padding: 30 },
       attributionControl: { compact: true }, dragRotate: false,
+      maxZoom: UHI_MAX_ZOOM,
     });
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
     map.addControl(new maplibregl.ScaleControl({ maxWidth: 100, unit: 'metric' }), 'bottom-left');
