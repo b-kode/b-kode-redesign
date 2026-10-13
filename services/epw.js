@@ -210,9 +210,10 @@ async function initEpwDemo(el){
    Request form — free (historical) vs paid (future/CMIP6) split.
    Field logic ported from X-GenWeather-Portal's Streamlit form
    (github.com/JonasBlancke/X-GenWeather-Portal): historical AMY/TMY
-   is free (AMY = one specific year, TMY = a reference period), future
-   TMY/DSY/XTMY/XDSY needs a CMIP6 run (SSP scenario only) and is paid,
-   UHI correction needs an LCZ. Submits to Formspree (see
+   (AMY = one specific year, TMY = a reference period) for any
+   coordinate; future TMY/DSY/XTMY/XDSY from CMIP6 for a GHSL city only,
+   SSP2-4.5 only; UHI correction needs an LCZ. Everything is free in the
+   demo phase. Submits to Formspree (see
    EPW_FORMSPREE_ENDPOINT below); falls back to a pre-filled mailto if
    that isn't configured.
    ============================================================ */
@@ -287,7 +288,115 @@ function initLocationMap(form){
   if ($lat.value && $lon.value) map.once('load', syncFromInputs);
 }
 
+/* City picker for future files: the CMIP6 archive only exists for the GHSL
+   urban centres (demo/epw/cities.json, id = GHS-UCDB ID_UC_G0, sorted by
+   population). Free text never reaches the request — a city only counts as
+   chosen once picked from the list, and editing the text clears it again. */
+function initCityPicker(form){
+  const $input = form.querySelector('#reqCity');
+  const $list = form.querySelector('#reqCityList');
+  const $picked = form.querySelector('[data-city-picked]');
+  if (!$input || !$list) return { get: () => null, clear(){} };
+
+  let cities = null, loading = null, selected = null, active = -1, shown = [];
+
+  const norm = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  const label = c => c.name + ', ' + c.country;
+
+  function load(){
+    if (!loading) {
+      loading = loadJSON('demo/epw/cities.json').then(d => {
+        cities = d.cities.map(r => ({ id: r[0], name: r[1], country: r[2], lat: r[3], lon: r[4],
+          key: norm(r[1] + ' ' + r[2]), nameKey: norm(r[1]) }));
+      }).catch(() => { loading = null; });
+    }
+    return loading;
+  }
+
+  function close(){
+    $list.hidden = true;
+    $input.setAttribute('aria-expanded', 'false');
+    active = -1;
+  }
+
+  function render(){
+    $list.innerHTML = '';
+    if (!shown.length) {
+      const li = document.createElement('li');
+      li.className = 'is-empty';
+      li.textContent = cities ? 'No matching city in the GHSL list' : 'Loading city list…';
+      $list.appendChild(li);
+    }
+    shown.forEach((c, i) => {
+      const li = document.createElement('li');
+      li.setAttribute('role', 'option');
+      li.setAttribute('aria-selected', i === active ? 'true' : 'false');
+      li.append(c.name);
+      const small = document.createElement('small');
+      small.textContent = c.country;
+      li.appendChild(small);
+      // mousedown (not click) so the choice lands before the input loses focus
+      li.addEventListener('mousedown', e => { e.preventDefault(); choose(c); });
+      $list.appendChild(li);
+    });
+    $list.hidden = false;
+    $input.setAttribute('aria-expanded', 'true');
+  }
+
+  function search(){
+    const q = norm($input.value.trim());
+    if (!cities || !q) { shown = []; return; }
+    const starts = [], inside = [];
+    for (const c of cities) {
+      if (c.nameKey.startsWith(q)) starts.push(c);
+      else if (c.key.includes(q)) inside.push(c);
+      if (starts.length >= 8) break;
+    }
+    shown = starts.concat(inside).slice(0, 8);
+  }
+
+  function choose(c){
+    selected = c;
+    $input.value = label(c);
+    $picked.hidden = false;
+    $picked.textContent = `GHSL urban centre ${c.id} · ${c.lat.toFixed(2)}, ${c.lon.toFixed(2)}`;
+    close();
+    form.dispatchEvent(new Event('change'));
+  }
+
+  function clear(){
+    selected = null;
+    $picked.hidden = true;
+    $picked.textContent = '';
+  }
+
+  $input.addEventListener('focus', () => { load().then(() => { if ($input.value.trim() && !selected) { search(); render(); } }); });
+  $input.addEventListener('input', () => {
+    if (selected) { clear(); form.dispatchEvent(new Event('change')); }
+    load().then(() => { search(); if ($input.value.trim()) { active = shown.length ? 0 : -1; render(); } else close(); });
+    if (!cities) { shown = []; render(); }
+  });
+  $input.addEventListener('keydown', e => {
+    if ($list.hidden || !shown.length) return;
+    if (e.key === 'ArrowDown') { active = (active + 1) % shown.length; render(); e.preventDefault(); }
+    else if (e.key === 'ArrowUp') { active = (active - 1 + shown.length) % shown.length; render(); e.preventDefault(); }
+    else if (e.key === 'Enter' && active >= 0) { choose(shown[active]); e.preventDefault(); }
+    else if (e.key === 'Escape') close();
+  });
+  $input.addEventListener('blur', () => {
+    close();
+    // unfinished text is not a valid choice — don't leave it looking like one
+    if (!selected) $input.value = '';
+  });
+  form.addEventListener('reset', () => { clear(); close(); });
+
+  return { get: () => selected, clear };
+}
+
 function initEpwRequestForm(form){
+  const cityPicker = initCityPicker(form);
+  const $lat = form.querySelector('#reqLat');
+  const $lon = form.querySelector('#reqLon');
   const $amyYear = form.querySelector('#reqAmyYear');
   const $tmyStart = form.querySelector('#reqTmyStart');
   const $tmyEnd = form.querySelector('#reqTmyEnd');
@@ -324,6 +433,10 @@ function initEpwRequestForm(form){
     $tmySub.hidden = !form.querySelector('input[value="TMY"][data-hist]').checked;
     $xmySub.hidden = !$xmyBoxes.some(b => b.checked);
     $lczField.hidden = !$uhi.checked;
+    // coordinates are only needed for historical files; a future-only
+    // request is located by its GHSL city instead
+    const histOn = $histBoxes.some(b => b.checked);
+    $lat.required = $lon.required = histOn;
     // :has() row-tint is CSS-native in current browsers; this class
     // toggle is the fallback for anything older so "checked" is never
     // silently invisible.
@@ -336,9 +449,9 @@ function initEpwRequestForm(form){
     const histOn = $histBoxes.some(b => b.checked);
     const futOn = $futBoxes.some(b => b.checked);
     if (futOn && histOn) {
-      $costNote.innerHTML = '<strong>Mixed request</strong> — historical part is free, future part is quoted after review.';
+      $costNote.innerHTML = '<strong>Free</strong> — historical (any location) and future (GHSL city, SSP2-4.5).';
     } else if (futOn) {
-      $costNote.innerHTML = '<strong>Paid request</strong> — future EPW needs a CMIP6 model run, quoted per city/scenario.';
+      $costNote.innerHTML = 'Future request (GHSL city, SSP2-4.5) — <strong>free</strong>.';
     } else if (histOn) {
       $costNote.innerHTML = 'Historical-only request — <strong>free</strong>.';
     } else {
@@ -363,12 +476,18 @@ function initEpwRequestForm(form){
   function buildRequestLines(){
     const name = form.querySelector('#reqName').value.trim();
     const email = form.querySelector('#reqEmail').value.trim();
-    const lat = form.querySelector('#reqLat').value.trim();
-    const lon = form.querySelector('#reqLon').value.trim();
     const notes = form.querySelector('#reqNotes').value.trim();
 
     const histSel = $histBoxes.filter(b => b.checked).map(b => b.value);
     const futSel = $futBoxes.filter(b => b.checked).map(b => b.value);
+    const city = cityPicker.get();
+
+    // Location stays the first-class line the back end already parses. A
+    // future-only request has no typed coordinates, so it carries the
+    // city's point instead.
+    let lat = $lat.value.trim();
+    let lon = $lon.value.trim();
+    if (!histSel.length && city) { lat = city.lat.toFixed(4); lon = city.lon.toFixed(4); }
 
     const lines = [
       `Project / client: ${name || '/'}`,
@@ -380,8 +499,11 @@ function initEpwRequestForm(form){
     if (histSel.includes('AMY')) lines.push(`  AMY year: ${$amyYear.value}`);
     if (histSel.includes('TMY')) lines.push(`  TMY reference period: ${$tmyStart.value}-${$tmyEnd.value}`);
 
-    lines.push('', `Future EPW (PAID): ${futSel.length ? futSel.join(', ') : 'none'}`);
+    // intake.py accepts both "(FREE)" and the old "(PAID)" label; deploy this
+    // together with that back end (an old back end only knows "(PAID)").
+    lines.push('', `Future EPW (FREE): ${futSel.length ? futSel.join(', ') : 'none'}`);
     if (futSel.length) {
+      if (city) lines.push(`  City: ${city.name}, ${city.country} (GHSL ID ${city.id})`);
       lines.push(`  Scenario: ${form.querySelector('#reqSsp').value.toUpperCase()}, period ${$futStart.value}-${$futEnd.value}`);
       if (futSel.includes('XTMY') || futSel.includes('XDSY')) {
         lines.push(`  Extreme metric: ${form.querySelector('#reqXmyMetric').value}, return period ${form.querySelector('#reqXmyReturn').value}y`);
@@ -391,7 +513,7 @@ function initEpwRequestForm(form){
     lines.push('', `UHI correction: ${$uhi.checked ? 'yes (LCZ ' + form.querySelector('#reqLcz').value + ')' : 'no'}`);
     if (notes) lines.push('', `Notes: ${notes}`);
 
-    return { name, email, lat, lon, notes, histSel, futSel, lines };
+    return { name, email, lat, lon, notes, histSel, futSel, city, lines };
   }
 
   function setStatus(kind, msg){
@@ -400,9 +522,24 @@ function initEpwRequestForm(form){
     $formStatus.className = 'svc-req-status svc-req-status--' + kind;
   }
 
+  // a validation message is stale as soon as the user changes anything
+  form.addEventListener('change', () => {
+    if ($formStatus.classList.contains('svc-req-status--error')) $formStatus.hidden = true;
+  });
+
   form.addEventListener('submit', async e => {
     e.preventDefault();
-    const { name, email, lines } = buildRequestLines();
+    const { name, email, lines, histSel, futSel, city } = buildRequestLines();
+
+    if (!histSel.length && !futSel.length) {
+      setStatus('error', 'Select at least one historical or future output.');
+      return;
+    }
+    if (futSel.length && !city) {
+      setStatus('error', 'Future files need a city: pick one from the list in the Future column.');
+      form.querySelector('#reqCity').focus();
+      return;
+    }
 
     // No Formspree endpoint configured yet — fall back to the mailto:
     // draft-opener so the form still does SOMETHING useful meanwhile.
