@@ -507,6 +507,44 @@
   font-size: 0.8em;
   color: var(--text);
 }
+.svc-req-label-note{
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* City picker (GHSL urban centres) — search box with a result list. */
+.svc-city-field{ position: relative; }
+.svc-city-list{
+  position: absolute;
+  left: 0; right: 0;
+  top: 100%;
+  z-index: 20;
+  margin: 0.25em 0 0;
+  padding: 0.25em 0;
+  list-style: none;
+  max-height: 16em;
+  overflow-y: auto;
+  background: #fff;
+  border-radius: 0.35em;
+  box-shadow: 0 4px 14px rgba(47,51,59,0.18), inset 0 0 1px #a0a1a7;
+}
+.svc-city-list li{
+  padding: 0.55em 1em;
+  font-size: 0.9em;
+  color: var(--heading);
+  cursor: pointer;
+}
+.svc-city-list li small{ color: var(--text); margin-left: 0.4em; }
+.svc-city-list li[aria-selected="true"],
+.svc-city-list li:hover{ background: var(--grey-2); }
+.svc-city-list li.is-empty{ cursor: default; color: var(--text); }
+.svc-city-list li.is-empty:hover{ background: transparent; }
+.svc-city-picked{
+  margin: 0.35em 0 0;
+  font-size: 0.8em;
+  color: var(--text);
+}
 .svc-req-again{
   font-family: inherit;
   font-size: 0.85em;

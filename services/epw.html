@@ -132,9 +132,10 @@
 							<div class="svc-block">
 								<h2>Request an EPW file</h2>
 								<p class="svc-req-intro">
-									Historical files are <strong>free</strong> &mdash; generated straight from
-									reanalysis and station data. Future / scenario-based files require a CMIP6
-									model run per request and are <strong>paid</strong>.
+									Historical and future files are <strong>free</strong> during the demo phase.
+									Historical files can be made for <strong>any location</strong> (reanalysis and
+									station data); future files are available for the urban centres in the
+									<strong>GHSL list</strong> (CMIP6, SSP2-4.5).
 								</p>
 
 								<form class="svc-req-form" id="epwReqForm">
@@ -151,10 +152,10 @@
 									</div>
 
 									<div class="svc-field">
-										<label>Site location</label>
+										<label>Site location <span class="svc-req-label-note">(historical files)</span></label>
 										<div class="svc-req-map-wrap">
 											<div class="svc-req-map" id="reqLocMap"></div>
-											<p class="svc-req-map-hint">Click the map to drop a pin, or type coordinates directly below.</p>
+											<p class="svc-req-map-hint">Click the map to drop a pin, or type coordinates directly below. Not needed for a future-only request &mdash; pick a city in the Future column instead.</p>
 										</div>
 									</div>
 
@@ -197,20 +198,25 @@
 											</div>
 										</div>
 
-										<div class="svc-req-col svc-req-col--paid">
+										<div class="svc-req-col svc-req-col--free">
 											<div class="svc-req-col-head">
-												<span class="svc-req-badge svc-req-badge--paid">Paid</span>
+												<span class="svc-req-badge svc-req-badge--free">Free</span>
 												<h3>Future EPW</h3>
 											</div>
-											<p class="svc-req-col-sub">CMIP6 projections &mdash; quoted per city / scenario combination.</p>
+											<p class="svc-req-col-sub">CMIP6 projections for the urban centres of the GHSL list.</p>
 
-											<div class="svc-field">
+											<div class="svc-field svc-city-field">
+												<label for="reqCity">City (GHSL urban centre)</label>
+												<input type="text" id="reqCity" placeholder="Start typing, e.g. Ghent" autocomplete="off"
+													role="combobox" aria-expanded="false" aria-controls="reqCityList" aria-autocomplete="list">
+												<ul class="svc-city-list" id="reqCityList" role="listbox" hidden></ul>
+												<p class="svc-city-picked" data-city-picked hidden></p>
+											</div>
+
+											<div class="svc-field svc-req-sub">
 												<label for="reqSsp">SSP scenario</label>
-												<select id="reqSsp">
-													<option value="ssp126">SSP1-2.6</option>
+												<select id="reqSsp" disabled>
 													<option value="ssp245" selected>SSP2-4.5</option>
-													<option value="ssp370">SSP3-7.0</option>
-													<option value="ssp585">SSP5-8.5</option>
 												</select>
 											</div>
 											<div class="svc-field svc-req-sub">
