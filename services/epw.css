@@ -572,3 +572,49 @@
 @media (max-width: 46em){
   .svc-req-cols{ grid-template-columns: 1fr; }
 }
+
+/* Request form as four numbered steps: About you, Location, Weather files, Options. */
+.svc-req-step{
+  background: #fff;
+  border-radius: 0.5em;
+  padding: 1.25em 1.4em 1.35em;
+  margin-bottom: 1.25em;
+  box-shadow: 0 1px 2px rgba(47,51,59,0.05);
+}
+.svc-req-step-head{
+  display: flex;
+  align-items: center;
+  gap: 0.7em;
+  margin-bottom: 1em;
+}
+.svc-req-step-head h3{
+  margin: 0;
+  font-size: 0.9em;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--heading);
+}
+.svc-req-step-no{
+  width: 1.8em; height: 1.8em;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.8em;
+  font-weight: 700;
+}
+/* columns sit inside a step now: no extra bottom gap, columns on the grey of the page */
+.svc-req-step .svc-req-cols{ margin-bottom: 0; }
+.svc-req-step .svc-req-col{ background: var(--grey-2, #f4f4f5); box-shadow: none; }
+.svc-req-custom{ margin-top: 0.9em; }
+.svc-req-hint{
+  margin: 0.4em 0 0;
+  font-size: 0.78em;
+  color: var(--text);
+}
+.svc-req-step [data-custom-panel]{ margin-top: 1em; }
+.svc-req-step [data-custom-panel] .svc-req-row{ margin-top: 0.9em; }
+.svc-req-step [hidden]{ display: none !important; }

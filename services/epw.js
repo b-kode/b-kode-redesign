@@ -222,70 +222,68 @@ async function initEpwDemo(el){
 // and land in the inbox configured on that Formspree form.
 const EPW_FORMSPREE_ENDPOINT = 'https://formspree.io/f/myknozkr';
 
-/* Pick-a-point map for the "Site location" field: click/drag a marker,
-   the #reqLat/#reqLon text inputs stay in sync either direction (typing
-   coordinates moves the marker too), so the map is a convenience on top
-   of the existing text fields, never a replacement that could lose a
-   typed-in value the map doesn't recognise. */
+/* Pick-a-point map for the optional "custom location" (historical files
+   only). It is created the first time the panel is shown (a map inside a
+   hidden box has no size), click/drag a marker and the #reqLat/#reqLon
+   inputs follow; typing coordinates moves the marker too. */
 function initLocationMap(form){
   const mapEl = form.querySelector('#reqLocMap');
-  if (!mapEl || typeof maplibregl === 'undefined') return;
+  if (!mapEl || typeof maplibregl === 'undefined') return { ensure(){} };
   const $lat = form.querySelector('#reqLat');
   const $lon = form.querySelector('#reqLon');
+  let map = null, marker = null;
 
-  const map = new maplibregl.Map({
-    container: mapEl,
-    style: {
-      version: 8,
-      sources: {
-        osm: {
-          type: 'raster', tileSize: 256,
-          tiles: ['https://a.tile.openstreetmap.org/{z}/{x}/{y}.png',
-                  'https://b.tile.openstreetmap.org/{z}/{x}/{y}.png',
-                  'https://c.tile.openstreetmap.org/{z}/{x}/{y}.png'],
-          attribution: '© OpenStreetMap',
-        },
-      },
-      layers: [{ id: 'osm', type: 'raster', source: 'osm' }],
-    },
-    center: [10, 40], zoom: 1.4,
-    attributionControl: { compact: true },
-  });
-  map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
-
-  let marker = null;
   function placeMarker(lng, lat, { fly = false } = {}){
     if (marker) marker.setLngLat([lng, lat]);
-    else marker = new maplibregl.Marker({ draggable: true, color: '#e97770' })
-      .setLngLat([lng, lat]).addTo(map);
-    marker.on('dragend', () => {
-      const p = marker.getLngLat();
-      $lat.value = p.lat.toFixed(4);
-      $lon.value = p.lng.toFixed(4);
-    });
+    else {
+      marker = new maplibregl.Marker({ draggable: true, color: '#e97770' }).setLngLat([lng, lat]).addTo(map);
+      marker.on('dragend', () => {
+        const p = marker.getLngLat();
+        $lat.value = p.lat.toFixed(4);
+        $lon.value = p.lng.toFixed(4);
+      });
+    }
     if (fly) map.flyTo({ center: [lng, lat], zoom: Math.max(map.getZoom(), 8) });
   }
 
-  map.on('click', e => {
-    $lat.value = e.lngLat.lat.toFixed(4);
-    $lon.value = e.lngLat.lng.toFixed(4);
-    placeMarker(e.lngLat.lng, e.lngLat.lat);
-  });
-
-  // typing coordinates by hand also moves/creates the pin, so the two
-  // input methods never drift apart
   function syncFromInputs(){
     const lat = parseFloat($lat.value), lon = parseFloat($lon.value);
-    if (Number.isFinite(lat) && Number.isFinite(lon) &&
-        Math.abs(lat) <= 90 && Math.abs(lon) <= 180) {
+    if (map && Number.isFinite(lat) && Number.isFinite(lon) && Math.abs(lat) <= 90 && Math.abs(lon) <= 180) {
       placeMarker(lon, lat, { fly: true });
     }
   }
   $lat.addEventListener('change', syncFromInputs);
   $lon.addEventListener('change', syncFromInputs);
 
-  // pre-existing values (e.g. browser autofill / back-navigation)
-  if ($lat.value && $lon.value) map.once('load', syncFromInputs);
+  function create(){
+    map = new maplibregl.Map({
+      container: mapEl,
+      style: {
+        version: 8,
+        sources: {
+          osm: {
+            type: 'raster', tileSize: 256,
+            tiles: ['https://a.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    'https://b.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    'https://c.tile.openstreetmap.org/{z}/{x}/{y}.png'],
+            attribution: '\u00a9 OpenStreetMap',
+          },
+        },
+        layers: [{ id: 'osm', type: 'raster', source: 'osm' }],
+      },
+      center: [10, 40], zoom: 1.4,
+      attributionControl: { compact: true },
+    });
+    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
+    map.on('click', e => {
+      $lat.value = e.lngLat.lat.toFixed(4);
+      $lon.value = e.lngLat.lng.toFixed(4);
+      placeMarker(e.lngLat.lng, e.lngLat.lat);
+    });
+    if ($lat.value && $lon.value) map.once('load', syncFromInputs);   // e.g. browser autofill
+  }
+
+  return { ensure(){ if (!map) create(); else map.resize(); } };
 }
 
 /* City picker for future files: the CMIP6 archive only exists for the GHSL
@@ -393,10 +391,41 @@ function initCityPicker(form){
   return { get: () => selected, clear };
 }
 
+/* Year limits mirror the back end (free_requests settings.py / validator.py): historical
+   1960..2024 (ERA5-Land, last full year), TMY and future periods span at least 10 years, a TMY at most 45
+   (and AMY + TMY together at most 45 years), future files 2025..2099. The selects only offer valid
+   combinations, so an impossible request cannot be built. */
+const HIST_MIN = 1960, HIST_MAX = 2024, FUT_MIN = 2025, FUT_MAX = 2099, MIN_SPAN = 10, MAX_UNION = 45;
+
+function fillYears($sel, from, to, want, desc){
+  const keep = Number.isFinite(want) ? Math.min(Math.max(want, from), to) : to;
+  const list = [];
+  for (let y = from; y <= to; y++) list.push(y);
+  if (desc) list.reverse();
+  $sel.innerHTML = '';
+  list.forEach(y => {
+    const o = document.createElement('option');
+    o.value = o.textContent = y;
+    if (y === keep) { o.selected = true; o.setAttribute('selected', ''); }   // attribute: form.reset() keeps it
+    $sel.appendChild(o);
+  });
+}
+// the end year can only be start+9 .. (start+maxSpan-1 | max): invalid ranges are not offered
+function refreshEnd($start, $end, max, maxSpan, want){
+  const s = +$start.value;
+  fillYears($end, s + MIN_SPAN - 1, Math.min(max, maxSpan ? s + maxSpan - 1 : max), want);
+}
+
 function initEpwRequestForm(form){
   const cityPicker = initCityPicker(form);
+  const locationMap = initLocationMap(form);
   const $lat = form.querySelector('#reqLat');
   const $lon = form.querySelector('#reqLon');
+  const $custom = form.querySelector('#reqCustomLoc');
+  const $customWrap = form.querySelector('[data-custom-wrap]');
+  const $customPanel = form.querySelector('[data-custom-panel]');
+  const $cityField = form.querySelector('[data-city-field]');
+  const $futSub = form.querySelector('[data-fut-sub]');
   const $amyYear = form.querySelector('#reqAmyYear');
   const $tmyStart = form.querySelector('#reqTmyStart');
   const $tmyEnd = form.querySelector('#reqTmyEnd');
@@ -415,28 +444,34 @@ function initEpwRequestForm(form){
   const $costNote = form.querySelector('[data-cost-note]');
   const $allCheckboxes = [...form.querySelectorAll('.svc-req-check input[type="checkbox"]')];
 
-  const thisYear = new Date().getFullYear();
-  const years = (from, to) => Array.from({ length: to - from + 1 }, (_, i) => to - i);
-  $amyYear.innerHTML = years(1960, thisYear).map(y => `<option${y === thisYear - 1 ? ' selected' : ''}>${y}</option>`).join('');
-  const fillYearSelect = ($sel, from, to, def) => {
-    $sel.innerHTML = years(from, to).reverse().map(y => `<option${y === def ? ' selected' : ''}>${y}</option>`).join('');
-  };
-  fillYearSelect($tmyStart, 1960, thisYear, 1990);
-  fillYearSelect($tmyEnd, 1960, thisYear, 2020);
-  fillYearSelect($futStart, 2015, 2100, 2031);
-  fillYearSelect($futEnd, 2015, 2100, 2050);
-
-  initLocationMap(form);
+  function initYears(){
+    fillYears($amyYear, HIST_MIN, HIST_MAX, HIST_MAX, true);              // newest first, 2024 selected
+    fillYears($tmyStart, HIST_MIN, HIST_MAX - (MIN_SPAN - 1), 1990);
+    refreshEnd($tmyStart, $tmyEnd, HIST_MAX, MAX_UNION, 2020);
+    fillYears($futStart, FUT_MIN, FUT_MAX - (MIN_SPAN - 1), 2031);
+    refreshEnd($futStart, $futEnd, FUT_MAX, null, 2050);
+  }
+  $tmyStart.addEventListener('change', () => refreshEnd($tmyStart, $tmyEnd, HIST_MAX, MAX_UNION, +$tmyEnd.value));
+  $futStart.addEventListener('change', () => refreshEnd($futStart, $futEnd, FUT_MAX, null, +$futEnd.value));
+  initYears();
 
   function syncVisibility(){
+    const histOn = $histBoxes.some(b => b.checked);
+    const futOn = $futBoxes.some(b => b.checked);
     $amySub.hidden = !form.querySelector('input[value="AMY"]').checked;
     $tmySub.hidden = !form.querySelector('input[value="TMY"][data-hist]').checked;
+    $futSub.hidden = !futOn;
     $xmySub.hidden = !$xmyBoxes.some(b => b.checked);
     $lczField.hidden = !$uhi.checked;
-    // coordinates are only needed for historical files; a future-only
-    // request is located by its GHSL city instead
-    const histOn = $histBoxes.some(b => b.checked);
-    $lat.required = $lon.required = histOn;
+    // A city is the default for everything. A custom location (map) is an opt-in for
+    // historical-only requests: future files only exist for the GHSL cities.
+    const customAllowed = histOn && !futOn;
+    $customWrap.hidden = !customAllowed;
+    if (!customAllowed) $custom.checked = false;
+    const customOn = $custom.checked;
+    $customPanel.hidden = !customOn;
+    $cityField.hidden = customOn;
+    if (customOn) locationMap.ensure();               // after un-hiding: a map needs a visible box
     // :has() row-tint is CSS-native in current browsers; this class
     // toggle is the fallback for anything older so "checked" is never
     // silently invisible.
@@ -449,9 +484,9 @@ function initEpwRequestForm(form){
     const histOn = $histBoxes.some(b => b.checked);
     const futOn = $futBoxes.some(b => b.checked);
     if (futOn && histOn) {
-      $costNote.innerHTML = '<strong>Free</strong> — historical (any location) and future (GHSL city, SSP2-4.5).';
+      $costNote.innerHTML = '<strong>Free</strong> — historical and future files for the chosen city (SSP2-4.5).';
     } else if (futOn) {
-      $costNote.innerHTML = 'Future request (GHSL city, SSP2-4.5) — <strong>free</strong>.';
+      $costNote.innerHTML = 'Future request (chosen city, SSP2-4.5) — <strong>free</strong>.';
     } else if (histOn) {
       $costNote.innerHTML = 'Historical-only request — <strong>free</strong>.';
     } else {
@@ -485,14 +520,16 @@ function initEpwRequestForm(form){
     // Location stays the first-class line the back end already parses. A
     // future-only request has no typed coordinates, so it carries the
     // city's point instead.
-    let lat = $lat.value.trim();
-    let lon = $lon.value.trim();
-    if (!histSel.length && city) { lat = city.lat.toFixed(4); lon = city.lon.toFixed(4); }
+    const customOn = $custom.checked;
+    let lat = '', lon = '';
+    if (customOn) { lat = $lat.value.trim(); lon = $lon.value.trim(); }
+    else if (city) { lat = city.lat.toFixed(4); lon = city.lon.toFixed(4); }
 
     const lines = [
       `Project / client: ${name || '/'}`,
       `Email: ${email || '/'}`,
       `Location: ${lat || '?'}, ${lon || '?'}`,
+      ...(!customOn && city ? [`City: ${city.name}, ${city.country} (GHSL ID ${city.id})`] : []),
       '',
       `Historical EPW (FREE): ${histSel.length ? histSel.join(', ') : 'none'}`,
     ];
@@ -503,7 +540,6 @@ function initEpwRequestForm(form){
     // together with that back end (an old back end only knows "(PAID)").
     lines.push('', `Future EPW (FREE): ${futSel.length ? futSel.join(', ') : 'none'}`);
     if (futSel.length) {
-      if (city) lines.push(`  City: ${city.name}, ${city.country} (GHSL ID ${city.id})`);
       lines.push(`  Scenario: ${form.querySelector('#reqSsp').value.toUpperCase()}, period ${$futStart.value}-${$futEnd.value}`);
       if (futSel.includes('XTMY') || futSel.includes('XDSY')) {
         lines.push(`  Extreme metric: ${form.querySelector('#reqXmyMetric').value}, return period ${form.querySelector('#reqXmyReturn').value}y`);
@@ -513,7 +549,7 @@ function initEpwRequestForm(form){
     lines.push('', `UHI correction: ${$uhi.checked ? 'yes (LCZ ' + form.querySelector('#reqLcz').value + ')' : 'no'}`);
     if (notes) lines.push('', `Notes: ${notes}`);
 
-    return { name, email, lat, lon, notes, histSel, futSel, city, lines };
+    return { name, email, lat, lon, notes, histSel, futSel, city, customOn, lines };
   }
 
   function setStatus(kind, msg){
@@ -529,15 +565,30 @@ function initEpwRequestForm(form){
 
   form.addEventListener('submit', async e => {
     e.preventDefault();
-    const { name, email, lines, histSel, futSel, city } = buildRequestLines();
+    const { name, email, lines, histSel, futSel, city, customOn, lat, lon } = buildRequestLines();
 
     if (!histSel.length && !futSel.length) {
       setStatus('error', 'Select at least one historical or future output.');
       return;
     }
-    if (futSel.length && !city) {
-      setStatus('error', 'Future files need a city: pick one from the list in the Future column.');
+    if (customOn) {
+      const la = parseFloat(lat), lo = parseFloat(lon);
+      if (!(Number.isFinite(la) && Number.isFinite(lo) && Math.abs(la) <= 90 && Math.abs(lo) <= 180)) {
+        setStatus('error', 'Enter valid coordinates, or drop a pin on the map.');
+        form.querySelector('#reqLat').focus();
+        return;
+      }
+    } else if (!city) {
+      setStatus('error', 'Pick a city from the list' +
+        (futSel.length ? '.' : ' (or tick "Use a custom location" for a map).'));
       form.querySelector('#reqCity').focus();
+      return;
+    }
+    const years = [];
+    if (histSel.includes('AMY')) years.push(+$amyYear.value);
+    if (histSel.includes('TMY')) years.push(+$tmyStart.value, +$tmyEnd.value);
+    if (years.length && Math.max(...years) - Math.min(...years) + 1 > MAX_UNION) {
+      setStatus('error', `The historical years you picked span more than ${MAX_UNION} years: bring the AMY year closer to the TMY period.`);
       return;
     }
 
@@ -570,18 +621,23 @@ function initEpwRequestForm(form){
         body: JSON.stringify(payload),
       });
       if (!res.ok) throw new Error('request failed');
+      // The confirmation lives OUTSIDE the form: the in-form status element is hidden together
+      // with the form, which used to leave the user with an empty page after a successful send.
       form.hidden = true;
-      $formStatus.hidden = false;
-      $formStatus.className = 'svc-req-status svc-req-status--ok';
-      $formStatus.textContent = '';
-      $formStatus.append(
+      $formStatus.hidden = true;
+      const $thanks = document.createElement('p');
+      $thanks.className = 'svc-req-status svc-req-status--ok';
+      $thanks.setAttribute('data-form-thanks', '');
+      $thanks.append(
         `Thanks${name ? ', ' + name : ''} — your EPW request has been sent. We'll follow up at ${email || 'the email you provided'} shortly. `);
       const again = document.createElement('button');
       again.type = 'button';
       again.className = 'svc-req-again';
       again.textContent = 'Send another request';
       again.addEventListener('click', () => {
+        $thanks.remove();
         form.reset();
+        initYears();
         syncVisibility();
         form.hidden = false;
         $formStatus.hidden = true;
@@ -589,7 +645,9 @@ function initEpwRequestForm(form){
         $submitBtn.textContent = 'Send request →';
         form.scrollIntoView({ behavior: 'smooth', block: 'start' });
       });
-      $formStatus.appendChild(again);
+      $thanks.appendChild(again);
+      form.after($thanks);
+      $thanks.scrollIntoView({ behavior: 'smooth', block: 'center' });
     } catch (err) {
       $submitBtn.disabled = false;
       $submitBtn.textContent = 'Send request →';
