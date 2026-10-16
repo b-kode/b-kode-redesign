@@ -122,7 +122,7 @@ async function initSolweigDemo(el){
     $legendHi.textContent = hi.toFixed(0) + ' °C';
     $legendLabel.textContent = `${meta.metric} · typical day, 24 h mean`;
     $statLabel.textContent = `Mean ${meta.metric} · present climate`;
-    $statValue.textContent = `${meta.cityMean.toFixed(1)} °C city average (${meta.hexMin.toFixed(1)}–${meta.hexMax.toFixed(1)} °C across hexagons)`;
+    $statValue.textContent = `${meta.cityMean.toFixed(1)} °C average (${meta.hexMin.toFixed(1)}–${meta.hexMax.toFixed(1)} °C across hexagons in the study area)`;
     $note.textContent = meta.note || '';
   }
 
