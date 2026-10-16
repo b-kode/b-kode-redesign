@@ -1,0 +1,21 @@
+{
+ "metric": "UTCI",
+ "range": [
+  20,
+  32
+ ],
+ "hex": "hex.geojson",
+ "tiles": "tiles/{z}/{x}/{y}.webp",
+ "minzoom": 8,
+ "maxzoom": 16,
+ "bounds": [
+  -7.9511,
+  33.4023,
+  -7.257,
+  33.7615
+ ],
+ "cityMean": 23.87,
+ "hexMin": 20.49,
+ "hexMax": 29.42,
+ "note": "Casablanca (GHSL 2102) · SOLWEIG, typical day 2019-08-06, present climate · mean UTCI over 24 h."
+}

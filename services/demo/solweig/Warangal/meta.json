@@ -1,0 +1,21 @@
+{
+ "metric": "WBGT",
+ "range": [
+  26,
+  30
+ ],
+ "hex": "hex.geojson",
+ "tiles": "tiles/{z}/{x}/{y}.webp",
+ "minzoom": 9,
+ "maxzoom": 16,
+ "bounds": [
+  79.471,
+  17.9286,
+  79.6539,
+  18.0376
+ ],
+ "cityMean": 27.54,
+ "hexMin": 26.87,
+ "hexMax": 28.82,
+ "note": "Warangal (GHSL 9814) · SOLWEIG, typical day 2022-04-16, present climate · mean WBGT over 24 h."
+}
