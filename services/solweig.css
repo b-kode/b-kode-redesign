@@ -212,32 +212,3 @@
   font-size: 0.8em;
   color: var(--text, #717479);
 }
-
-/* Request a study */
-.svc-study-steps{
-  list-style: none;
-  counter-reset: step;
-  margin: 1.25em 0 1.75em;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.5em 2em;
-}
-.svc-study-steps li{ counter-increment: step; position: relative; padding-top: 2.6em; }
-.svc-study-steps li::before{
-  content: counter(step);
-  position: absolute;
-  top: 0; left: 0;
-  width: 1.9em; height: 1.9em;
-  border-radius: 100%;
-  background: var(--accent);
-  color: #fff;
-  font-size: 0.9em;
-  font-weight: 700;
-  display: flex; align-items: center; justify-content: center;
-}
-.svc-study-steps strong{ display: block; color: var(--heading); margin-bottom: 0.25em; }
-.svc-study-steps span{ font-size: 0.9em; line-height: 1.6em; color: var(--text); }
-.svc-study-cta{ display: inline-block; text-decoration: none; }
-.svc-study-cta:hover{ color: #fff; text-decoration: none; }
-@media (max-width: 700px){ .svc-study-steps{ grid-template-columns: 1fr; } }
