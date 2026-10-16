@@ -127,49 +127,66 @@
   list-style: none;
   padding: 0;
   margin: 0;
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 2.5em 2em;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;   /* an incomplete last row stays centred */
+  gap: 3em 2.5em;
 }
-/* 3 items on the top row, 2 centred below — no boxes, just icon + text */
+/* 3 per row by default (5 items -> 3 + 2); exactly 4 items -> one row of 4 */
 .svc-strengths li{
-  grid-column: span 2;
+  flex: 0 0 calc((100% - 5em) / 3);
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
   gap: 1.1em;
-  padding: 0 0.5em;
 }
-.svc-strengths li:nth-child(4){ grid-column: 2 / span 2; }
-.svc-strengths li:nth-child(5){ grid-column: 4 / span 2; }
+.svc-strengths li:first-child:nth-last-child(4),
+.svc-strengths li:first-child:nth-last-child(4) ~ li{ flex-basis: calc((100% - 7.5em) / 4); }
 .svc-strengths .pico{
   flex: 0 0 auto;
-  width: 5em;
-  height: 5em;
+  width: 5.5em;
+  height: 5.5em;
   border-radius: 100%;
-  background: transparent;
-  border: 2px solid var(--accent);
+  background: rgba(233,119,112,0.1);
   color: var(--accent);
   display: flex;
   align-items: center;
   justify-content: center;
 }
+/* The site's universal reset (main.css) sets `font: inherit` on every
+   element, including <i> — that wipes the Font Awesome font-family a
+   bare <i class="fas fa-x"> depends on, leaving the glyph blank. The
+   site's own .icon:before rule works around this the same way. */
 .svc-strengths .pico i{
   font-family: 'Font Awesome 5 Free';
   font-weight: 900;
-  font-size: 2em;
+  font-size: 2.2em;
 }
-.svc-strengths strong{ color: var(--accent); display: block; margin-bottom: 0.4em; font-size: 1.1em; }
-.svc-strengths span{ font-size: 0.9em; line-height: 1.55em; color: var(--heading); }
+.svc-strengths strong{
+  display: block;
+  margin-bottom: 0.5em;
+  font-size: 1.05em;
+  color: var(--heading);
+}
+.svc-strengths strong::after{
+  content: '';
+  display: block;
+  width: 2em;
+  height: 2px;
+  margin: 0.55em auto 0;
+  background: var(--accent);
+}
+.svc-strengths span{ font-size: 0.9em; line-height: 1.6em; color: var(--text); }
 @media (max-width: 980px){
-  .svc-strengths{ grid-template-columns: repeat(2, 1fr); }
-  .svc-strengths li, .svc-strengths li:nth-child(4), .svc-strengths li:nth-child(5){ grid-column: auto; }
-  .svc-strengths li:nth-child(5){ grid-column: 1 / -1; }
+  .svc-strengths li,
+  .svc-strengths li:first-child:nth-last-child(4),
+  .svc-strengths li:first-child:nth-last-child(4) ~ li{ flex-basis: calc((100% - 2.5em) / 2); }
 }
 @media (max-width: 600px){
-  .svc-strengths{ grid-template-columns: 1fr; }
-  .svc-strengths li:nth-child(5){ grid-column: auto; }
+  .svc-strengths li,
+  .svc-strengths li:first-child:nth-last-child(4),
+  .svc-strengths li:first-child:nth-last-child(4) ~ li{ flex-basis: 100%; }
 }
 
 /* quote */
