@@ -1,0 +1,62 @@
+{
+ "city": "Warangal, India",
+ "ghsl": 9814,
+ "buildings": 174395,
+ "bounds": [
+  79.4732,
+  17.9303,
+  79.6535,
+  18.0357
+ ],
+ "classes": [
+  "Very very bad",
+  "Very bad",
+  "Bad",
+  "Good",
+  "Very good",
+  "Excellent"
+ ],
+ "colors": [
+  "#a4691b",
+  "#d1a559",
+  "#edd9a8",
+  "#c6f2ec",
+  "#6edfd5",
+  "#009b8e"
+ ],
+ "compliance": [
+  {
+   "rules": 0,
+   "pct": 15.1
+  },
+  {
+   "rules": 1,
+   "pct": 65.85
+  },
+  {
+   "rules": 2,
+   "pct": 17.62
+  },
+  {
+   "rules": 3,
+   "pct": 1.43
+  }
+ ],
+ "levels": [
+  {
+   "id": "large",
+   "maxzoom": 12
+  },
+  {
+   "id": "mid",
+   "minzoom": 12,
+   "maxzoom": 14
+  },
+  {
+   "id": "small",
+   "minzoom": 14,
+   "maxzoom": 16
+  }
+ ],
+ "buildingsMinZoom": 16
+}

@@ -1,22 +1,29 @@
 /* ============================================================
-   B-Kode — Access to Green & Blue (3-30-300) demo.
-   Real MapLibre map: the real scored-buildings dataset (2,718
-   buildings over Bruges) rendered as a fill layer coloured by
-   total access score, on a real OSM basemap. Click a building to
-   open a five-rule pentagon radar panel against the city average.
-   Ported from the standalone Leaflet/flatgeobuf prototype
-   (mockups/b-kode-services/demo/accessibilty/interactive_map.html)
-   onto the same MapLibre/OSM pattern as the other product demos.
+   B-Kode — 3-30-300 demo (Warangal, India).
+   Real MapLibre map over the interactive viewer's results:
+     · zoomed out  — average score per area (3 aggregation levels)
+     · zoomed in   — every building (174,395) from a vector-tile
+                     pyramid, coloured by its class on the chosen rule
+   Switch between the overall score and each rule (3 / 30 / 300);
+   click a building or area for its details.
    ============================================================ */
 
-const RULE_DEFS = [
-  { key: 'p3',   label: 'Rule 3 · canopy visible' },
-  { key: 'p30',  label: 'Rule 30 · 30% canopy in 30 m' },
-  { key: 'p300', label: 'Rule 300 · park within 300 m' },
-  { key: 'pdw',  label: 'Drinking water nearby' },
-  { key: 'pwf',  label: 'Water fountain nearby' },
+const BASE = 'demo/access/';
+// amber (worst) -> teal (best), same classes as the interactive viewer
+const CLASS_COLORS = ["#a4691b", "#d1a559", "#edd9a8", "#c6f2ec", "#6edfd5", "#009b8e"];
+const CLASS_LABELS = ["Very very bad", "Very bad", "Bad", "Good", "Very good", "Excellent"];
+
+const RULES = [
+  { id: 'total', label: 'Overall' },
+  { id: '3',   label: 'Rule 3 · trees',  long: 'Rule 3 — trees nearby',          cls: 'c3',   val: 'v3',   rank: 'rank_3'   },
+  { id: '30',  label: 'Rule 30 · canopy', long: 'Rule 30 — canopy cover',        cls: 'c30',  val: 'v30',  rank: 'rank_30'  },
+  { id: '300', label: 'Rule 300 · parks', long: 'Rule 300 — distance to a park', cls: 'c300', val: 'v300', rank: 'rank_300' },
 ];
-const SCORE_COLORS = ['#d9534f', '#f0ad4e', '#5cb85c', '#1a9e6f'];
+const RULE_FMT = {
+  '3':   v => `${Math.round(v)} trees nearby`,
+  '30':  v => `${(+v).toFixed(0)}% canopy cover`,
+  '300': v => v < 10 ? 'park next door' : `${Math.round(v)} m to the nearest park`,
+};
 
 const OSM_STYLE = {
   version: 8,
@@ -32,8 +39,8 @@ const OSM_STYLE = {
   layers: [
     { id: 'bg', type: 'background', paint: { 'background-color': '#0b0f15' } },
     { id: 'osm', type: 'raster', source: 'osm',
-      paint: { 'raster-opacity': 0.55, 'raster-saturation': -0.6,
-               'raster-brightness-max': 0.55 } },
+      paint: { 'raster-opacity': 0.5, 'raster-saturation': -0.7,
+               'raster-brightness-max': 0.5 } },
   ],
 };
 
@@ -47,65 +54,32 @@ function demoError(el){
     run <code>python -m http.server</code> in the repo root and open it over
     <code>http://localhost:8000</code> (opening the file directly won't fetch the JSON).</p>`;
 }
-function addCoordsToBounds(c, b){
-  if (typeof c[0] === 'number') b.extend(c);
-  else c.forEach(x => addCoordsToBounds(x, b));
-}
 
-/* 5-point radar/pentagon, values 0..1 */
-function radarSVG(values, opt){
-  opt = opt || {};
-  const W = 260, H = 260, cx = W / 2, cy = H / 2, R = 90;
-  const n = values.length;
-  const angle = i => -Math.PI / 2 + i * (2 * Math.PI / n);
-  const pt = (i, r) => [cx + r * Math.cos(angle(i)), cy + r * Math.sin(angle(i))];
-
-  const rings = [0.25, 0.5, 0.75, 1].map(f => {
-    const pts = values.map((_, i) => pt(i, R * f).join(',')).join(' ');
-    return `<polygon points="${pts}" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>`;
-  }).join('');
-  const spokes = values.map((_, i) => {
-    const [x, y] = pt(i, R);
-    return `<line x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>`;
-  }).join('');
-  const shapePts = values.map((v, i) => pt(i, R * Math.max(0, Math.min(1, v))).join(',')).join(' ');
-  const shape = `<polygon points="${shapePts}" fill="#f98780" fill-opacity="0.32" stroke="#f98780" stroke-width="2"/>`;
-  const labels = values.map((_, i) => {
-    const [x, y] = pt(i, R + 20);
-    const anchor = Math.abs(Math.cos(angle(i))) < 0.2 ? 'middle' : (Math.cos(angle(i)) > 0 ? 'start' : 'end');
-    return `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="${anchor}" dominant-baseline="middle"
-              font-size="9" fill="rgba(255,255,255,0.7)">${opt.labels ? opt.labels[i] : ''}</text>`;
-  }).join('');
-
-  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${opt.aria || 'Access score pentagon'}">
-    ${rings}${spokes}${shape}${labels}
-  </svg>`;
+/* colour of a 0..1 position on the amber->teal ramp, as a MapLibre stop list */
+function rampStops(lo, hi){
+  const out = [];
+  CLASS_COLORS.forEach((c, i) => out.push(lo + ((hi - lo) * i) / (CLASS_COLORS.length - 1), c));
+  return out;
 }
 
 async function initAccessDemo(el){
-  let data;
-  try { data = await loadJSON('demo/access/buildings.geojson'); }
-  catch (e) { return demoError(el); }
+  let meta, aggs;
+  try {
+    meta = await loadJSON(BASE + 'meta.json');
+    aggs = await Promise.all(meta.levels.map(l => loadJSON(`${BASE}agg_${l.id}.geojson`)));
+  } catch (e) { return demoError(el); }
 
-  const buildings = data.features.map(f => f.properties);
-  const byId = {};
-  buildings.forEach(b => (byId[b.id] = b));
-  const cityAvgTotal = buildings.reduce((s, b) => s + b.total, 0) / buildings.length;
-  const maxTotal = Math.max(...buildings.map(b => b.total)) || 5;
+  const root = new URL(BASE, location.href).href;
+  const compl = meta.compliance;
 
   el.innerHTML = `
+    <div class="acc-seg" data-seg></div>
     <div class="acc-stage">
       <div class="acc-map" data-map></div>
-      <!-- Everything stacks top-left only — MapLibre's own controls
-           own the other 3 corners (zoom top-right, scale
-           bottom-left, attribution bottom-right). -->
       <div class="acc-overlay-stack">
-        <div class="acc-hint">Click any coloured building for its 5-rule pentagon.</div>
-        <div class="acc-legend">
-          <span>Total access score</span>
-          <div class="bar"></div>
-          <div class="ticks"><span>Worst</span><span>Best</span></div>
-        </div>
+        <div class="acc-hint" data-hint></div>
+        <div class="acc-legend" data-legend></div>
+        <label class="acc-parks"><input type="checkbox" data-parks checked /> Parks (&gt; 0.5 ha)</label>
       </div>
     </div>
     <div class="acc-detail" data-detail hidden>
@@ -113,86 +87,172 @@ async function initAccessDemo(el){
         <h3 data-detailtitle>—</h3>
         <button type="button" class="acc-close" data-close>Close &times;</button>
       </div>
-      <div class="acc-detail-body">
-        <div class="acc-radar" data-radar></div>
-        <div class="acc-score">
-          <span class="total-lbl">Total score</span>
-          <div class="total-val" data-total>—</div>
-          <div class="total-of">out of 5.0</div>
-          <ul class="rule-list" data-rules></ul>
-        </div>
-      </div>
+      <div class="acc-bars" data-bars></div>
     </div>
-    <p class="acc-avg-note">City average total score across all
-      <strong>${buildings.length.toLocaleString()}</strong> scored buildings:
-      <strong>${cityAvgTotal.toFixed(2)} / 5.0</strong>.</p>`;
+    <div class="acc-compl">
+      <div class="acc-compl-head">Warangal in numbers — buildings meeting the 3-30-300 rules
+        <span>(rated Good or better, out of ${meta.buildings.toLocaleString()} buildings)</span></div>
+      <div class="acc-compl-bar">
+        ${compl.map((c, i) => `<span style="flex:${c.pct};background:${CLASS_COLORS[[0, 2, 4, 5][i]]}" title="${c.rules} of 3 rules"></span>`).join('')}
+      </div>
+      <div class="acc-compl-lbl">${compl.map((c, i) =>
+        `<span><i style="background:${CLASS_COLORS[[0, 2, 4, 5][i]]}"></i><b>${c.pct.toFixed(0)}%</b> meet ${c.rules} of 3 rules</span>`).join('')}</div>
+    </div>`;
 
-  const $mapEl = el.querySelector('[data-map]');
+  const $seg = el.querySelector('[data-seg]');
+  const $map = el.querySelector('[data-map]');
+  const $hint = el.querySelector('[data-hint]');
+  const $legend = el.querySelector('[data-legend]');
+  const $parks = el.querySelector('[data-parks]');
   const $detail = el.querySelector('[data-detail]');
-  const $detailTitle = el.querySelector('[data-detailtitle]');
-  const $radar = el.querySelector('[data-radar]');
-  const $total = el.querySelector('[data-total]');
-  const $rules = el.querySelector('[data-rules]');
+  const $title = el.querySelector('[data-detailtitle]');
+  const $bars = el.querySelector('[data-bars]');
   const $close = el.querySelector('[data-close]');
 
-  function showBuilding(id){
-    const b = byId[id];
-    if (!b) return;
+  let rule = 'total', map = null;
+  const rdef = () => RULES.find(r => r.id === rule);
+
+  // value range per level, for stretching the area colours (like the viewer)
+  const levelRange = aggs.map(g => {
+    const out = {};
+    ['t', 'rank_3', 'rank_30', 'rank_300'].forEach(k => {
+      const v = g.features.map(f => f.properties[k]);
+      out[k] = [Math.min(...v), Math.max(...v)];
+    });
+    return out;
+  });
+
+  function areaKey(){ return rule === 'total' ? 't' : rdef().rank; }
+
+  function renderSeg(){
+    $seg.innerHTML = RULES.map(r =>
+      `<button data-rule="${r.id}" class="${r.id === rule ? 'is-active' : ''}">${r.label}</button>`).join('');
+    $seg.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+      rule = b.dataset.rule; renderSeg(); applyRule();
+    }));
+  }
+
+  function buildingColor(){
+    if (rule === 'total') return ['interpolate', ['linear'], ['get', 't'], ...rampStops(0, 3)];
+    const c = rdef().cls;
+    return ['match', ['get', c], 0, CLASS_COLORS[0], 1, CLASS_COLORS[1], 2, CLASS_COLORS[2],
+            3, CLASS_COLORS[3], 4, CLASS_COLORS[4], CLASS_COLORS[5]];
+  }
+
+  function applyRule(){
+    renderLegend();
+    if (!map || !map.getLayer('bld')) return;
+    map.setPaintProperty('bld', 'fill-color', buildingColor());
+    meta.levels.forEach((l, i) => {
+      const [lo, hi] = levelRange[i][areaKey()];
+      map.setPaintProperty('agg-' + l.id, 'fill-color',
+        ['interpolate', ['linear'], ['get', areaKey()], ...rampStops(lo, hi === lo ? lo + 1e-6 : hi)]);
+    });
+    updateHint();
+  }
+
+  function renderLegend(){
+    const zoomed = map && map.getZoom() >= meta.buildingsMinZoom;
+    const grad = `linear-gradient(to right, ${CLASS_COLORS.join(', ')})`;
+    if (zoomed && rule !== 'total') {
+      $legend.innerHTML = `<span class="lbl">${rdef().long}</span>` +
+        CLASS_LABELS.map((l, i) => `<div class="row"><i style="background:${CLASS_COLORS[i]}"></i>${l}</div>`).reverse().join('');
+    } else {
+      const title = rule === 'total'
+        ? (zoomed ? 'Overall score (sum of the 3 rules)' : 'Average overall score per area')
+        : 'Average ' + rdef().long.toLowerCase() + ' per area';
+      $legend.innerHTML = `<span class="lbl">${title}</span><div class="bar" style="background:${grad}"></div>
+        <div class="ticks"><span>Worst</span><span>Best</span></div>`;
+    }
+  }
+
+  function updateHint(){
+    const z = map ? map.getZoom() : 0;
+    $hint.textContent = z >= meta.buildingsMinZoom
+      ? 'Click a building for its scores.'
+      : 'Zoom in to see individual buildings (or click an area).';
+    renderLegend();
+  }
+
+  function showBuilding(p){
     $detail.hidden = false;
-    $detailTitle.textContent = `Building #${b.id}`;
-    const values = RULE_DEFS.map(r => b[r.key]);
-    $radar.innerHTML = radarSVG(values, { labels: RULE_DEFS.map(r => r.label), aria: `Access pentagon for building ${b.id}` });
-    $total.textContent = b.total.toFixed(1);
-    $rules.innerHTML = RULE_DEFS.map(r =>
-      `<li><span>${r.label}</span><span class="rule-val">${(b[r.key] * 100).toFixed(0)}%</span></li>`).join('');
+    $title.textContent = `Building #${p.id}`;
+    $bars.innerHTML = [RULES[1], RULES[2], RULES[3]].map(r => {
+      const c = +p[r.cls], frac = c / 5;
+      return `<div class="acc-bar-row">
+        <div class="acc-bar-lbl"><b>${r.long}</b><span>${RULE_FMT[r.id](+p[r.val])}</span></div>
+        <div class="acc-bar-track"><span style="width:${Math.max(4, frac * 100)}%;background:${CLASS_COLORS[c]}"></span></div>
+        <div class="acc-bar-cls" style="color:${CLASS_COLORS[c]}">${CLASS_LABELS[c]}</div></div>`;
+    }).join('') + `<div class="acc-bar-total">Overall score <b>${(+p.t).toFixed(1)}</b> / 3.0</div>`;
     $detail.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
+
+  function areaPopup(p){
+    return `<b>${(+p.t).toFixed(2)} / 3.0</b> average · ${(+p.n).toLocaleString()} buildings<br>
+      ${(+p.val_3).toFixed(1)} trees · ${(+p.val_30).toFixed(0)}% canopy · ${Math.round(+p.val_300)} m to park`;
+  }
+
+  function buildMap(){
+    map = new maplibregl.Map({
+      container: $map, style: JSON.parse(JSON.stringify(OSM_STYLE)),
+      bounds: [[meta.bounds[0], meta.bounds[1]], [meta.bounds[2], meta.bounds[3]]],
+      fitBoundsOptions: { padding: 20 },
+      attributionControl: { compact: true }, dragRotate: false, maxZoom: 19,
+    });
+    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
+    map.addControl(new maplibregl.ScaleControl({ maxWidth: 100, unit: 'metric' }), 'bottom-left');
+
+    map.on('load', async () => {
+      const parks = await loadJSON(BASE + 'parks.geojson');
+      map.addSource('parks', { type: 'geojson', data: parks });
+      map.addLayer({ id: 'parks', type: 'fill', source: 'parks',
+        paint: { 'fill-color': '#2ecc71', 'fill-opacity': 0.3, 'fill-outline-color': '#1b7a3d' } });
+
+      meta.levels.forEach((l, i) => {
+        map.addSource('agg-' + l.id, { type: 'geojson', data: aggs[i] });
+        map.addLayer({ id: 'agg-' + l.id, type: 'fill', source: 'agg-' + l.id,
+          ...(l.minzoom != null ? { minzoom: l.minzoom } : {}),
+          maxzoom: l.maxzoom,
+          paint: { 'fill-color': '#888', 'fill-opacity': 0.8, 'fill-outline-color': 'rgba(11,15,21,0.5)' } });
+      });
+
+      map.addSource('bld', { type: 'vector', tiles: [root + 'tiles/{z}/{x}/{y}.pbf'],
+        minzoom: 13, maxzoom: 16, bounds: meta.bounds });
+      map.addLayer({ id: 'bld', type: 'fill', source: 'bld', 'source-layer': 'b',
+        minzoom: meta.buildingsMinZoom,
+        paint: { 'fill-color': '#888', 'fill-opacity': 0.9 } });
+      map.addLayer({ id: 'bld-line', type: 'line', source: 'bld', 'source-layer': 'b',
+        minzoom: meta.buildingsMinZoom,
+        paint: { 'line-color': '#0b0f15', 'line-opacity': 0.35, 'line-width': 0.3 } });
+
+      const pop = new maplibregl.Popup({ closeButton: false, className: 'sw-pop', maxWidth: '18em' });
+      meta.levels.forEach(l => {
+        const id = 'agg-' + l.id;
+        map.on('mouseenter', id, () => (map.getCanvas().style.cursor = 'pointer'));
+        map.on('mouseleave', id, () => { map.getCanvas().style.cursor = ''; pop.remove(); });
+        map.on('mousemove', id, e => {
+          const f = e.features && e.features[0];
+          if (f) pop.setLngLat(e.lngLat).setHTML(areaPopup(f.properties)).addTo(map);
+        });
+      });
+      map.on('mouseenter', 'bld', () => (map.getCanvas().style.cursor = 'pointer'));
+      map.on('mouseleave', 'bld', () => (map.getCanvas().style.cursor = ''));
+      map.on('click', 'bld', e => { const f = e.features && e.features[0]; if (f) showBuilding(f.properties); });
+      map.on('zoom', updateHint);
+
+      applyRule();
+    });
+  }
+
+  $parks.addEventListener('change', () => {
+    if (map && map.getLayer('parks')) map.setLayoutProperty('parks', 'visibility', $parks.checked ? 'visible' : 'none');
+  });
   $close.addEventListener('click', () => { $detail.hidden = true; });
 
-  const map = new maplibregl.Map({
-    container: $mapEl,
-    style: JSON.parse(JSON.stringify(OSM_STYLE)),
-    attributionControl: { compact: true }, dragRotate: false,
-  });
-  map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
-  map.addControl(new maplibregl.ScaleControl({ maxWidth: 100, unit: 'metric' }), 'bottom-left');
-
-  map.on('load', () => {
-    try { map.setLayoutProperty('osm', 'visibility', 'visible'); } catch (e) {}
-    map.addSource('buildings', { type: 'geojson', data, promoteId: 'id' });
-    map.addLayer({ id: 'bld-fill', type: 'fill', source: 'buildings',
-      paint: {
-        'fill-color': ['interpolate', ['linear'], ['/', ['get', 'total'], maxTotal],
-          0, SCORE_COLORS[0], 0.33, SCORE_COLORS[1], 0.66, SCORE_COLORS[2], 1, SCORE_COLORS[3]],
-        'fill-opacity': 0.85,
-      } });
-    map.addLayer({ id: 'bld-line', type: 'line', source: 'buildings',
-      paint: { 'line-color': '#0b0f15', 'line-opacity': 0.4, 'line-width': 0.4 } });
-    map.addLayer({ id: 'bld-hover', type: 'line', source: 'buildings',
-      filter: ['==', ['get', 'id'], -1],
-      paint: { 'line-color': '#ffffff', 'line-width': 2.5 } });
-
-    map.on('mouseenter', 'bld-fill', () => (map.getCanvas().style.cursor = 'pointer'));
-    map.on('mouseleave', 'bld-fill', () => {
-      map.getCanvas().style.cursor = '';
-      map.setFilter('bld-hover', ['==', ['get', 'id'], -1]);
-    });
-    map.on('mousemove', 'bld-fill', (e) => {
-      const f = e.features && e.features[0];
-      if (f) map.setFilter('bld-hover', ['==', ['get', 'id'], f.properties.id]);
-    });
-    map.on('click', 'bld-fill', (e) => {
-      const f = e.features && e.features[0];
-      if (f) showBuilding(f.properties.id);
-    });
-
-    const b = new maplibregl.LngLatBounds();
-    data.features.forEach(ft => addCoordsToBounds(ft.geometry.coordinates, b));
-    if (!b.isEmpty()) map.fitBounds(b, { padding: 30, duration: 0 });
-  });
-
-  showBuilding(buildings[0].id);
-  $detail.hidden = true;
+  renderSeg();
+  renderLegend();
+  updateHint();
+  buildMap();
 }
 
 document.addEventListener('DOMContentLoaded', () => {

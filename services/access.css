@@ -1,21 +1,31 @@
-/* Access to Green & Blue demo — real MapLibre map, ported from the
-   standalone interactive_map.html prototype (Leaflet + flatgeobuf)
-   onto the same OSM-basemap pattern as the other product demos:
-   every building coloured by its total access score, click one to
-   open a pentagon radar panel against the city average. */
+/* 3-30-300 demo — MapLibre map: area averages when zoomed out,
+   every building (vector tiles) when zoomed in; switch between the
+   overall score and each of the three rules. */
 
 .svc-demo-wrap{
   max-width: 70em;
   margin: 0 0 3.5em;
 }
 
-.acc-toolbar{
+/* rule switcher, above the map */
+.acc-seg{
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-end;
-  gap: 1em 1.5em;
-  margin-bottom: 1em;
+  gap: 0.5em;
+  margin-bottom: 0.9em;
 }
+.acc-seg button{
+  font-family: inherit;
+  font-size: 0.8em;
+  font-weight: 700;
+  color: #717479;
+  background: #eee;
+  border: 0;
+  border-radius: 0.35em;
+  padding: 0.6em 1.2em;
+  cursor: pointer;
+}
+.acc-seg button.is-active{ color: #fff; background: #f17773; }
 
 .acc-stage{
   position: relative;
@@ -26,13 +36,11 @@
 }
 .acc-map{
   width: 100%;
-  height: 520px;
+  height: 540px;
 }
 
-/* Both cards stack in this one top-left column. MapLibre's own
-   controls own the top-right (zoom), bottom-left (scale) and
-   bottom-right (attribution) corners — nothing we draw is ever
-   allowed to compete with them for space. */
+/* every overlay card stacks top-left; MapLibre's controls keep the
+   other three corners */
 .acc-overlay-stack{
   position: absolute;
   top: 1em;
@@ -43,9 +51,10 @@
   gap: 0.6em;
   max-width: 16em;
 }
-
-.acc-legend{
-  padding: 0.7em 1em;
+.acc-hint,
+.acc-legend,
+.acc-parks{
+  padding: 0.6em 0.9em;
   border-radius: 0.35em;
   background: rgba(28, 31, 38, 0.85);
   backdrop-filter: blur(4px);
@@ -53,33 +62,28 @@
   color: #fff;
   font-size: 0.75em;
 }
+.acc-hint{ font-size: 0.78em; }
+.acc-legend .lbl{ display: block; color: rgba(255,255,255,0.75); margin-bottom: 0.45em; }
 .acc-legend .bar{
-  width: 10em;
+  width: 11em;
   height: 0.6em;
   border-radius: 0.3em;
-  margin: 0.35em 0;
-  background: linear-gradient(to right, #d9534f, #f0ad4e, #5cb85c, #1a9e6f);
+  margin-bottom: 0.35em;
 }
-.acc-legend .ticks{
-  display: flex;
-  justify-content: space-between;
-  color: rgba(255,255,255,0.6);
+.acc-legend .ticks{ display: flex; justify-content: space-between; color: rgba(255,255,255,0.6); }
+.acc-legend .row{ display: flex; align-items: center; gap: 0.6em; margin-top: 0.3em; }
+.acc-legend .row i{
+  width: 1.1em; height: 0.8em; border-radius: 0.2em;
+  border: 1px solid rgba(255,255,255,0.25);
+  flex: 0 0 auto;
 }
+.acc-parks{ display: flex; align-items: center; gap: 0.55em; cursor: pointer; }
+.acc-parks input{ accent-color: #2ecc71; }
 
-.acc-hint{
-  padding: 0.6em 0.9em;
-  border-radius: 0.35em;
-  background: rgba(28, 31, 38, 0.85);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  color: #fff;
-  font-size: 0.78em;
-}
-
-/* pentagon detail panel — below the map, same dark card treatment
-   as the SOLWEIG/UHI detail panels */
+/* building detail: one bar per rule */
 .acc-detail{
-  border-top: 1px solid var(--rule, #ddd);
+  border: 1px solid var(--rule, #ddd);
+  border-top: 0;
   background: #1c1f26;
   color: #fff;
 }
@@ -103,61 +107,36 @@
   border: 0;
 }
 .acc-detail-head .acc-close:hover{ color: #fff; }
-
-.acc-detail-body{
+.acc-bars{ padding: 0.5em 1.25em 1.25em; }
+.acc-bar-row{
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.5em;
-  padding: 0.5em 1.25em 1.5em;
-}
-@media (max-width: 640px){
-  .acc-detail-body{ grid-template-columns: 1fr; }
-}
-.acc-radar{
-  display: flex;
+  grid-template-columns: 15em 1fr 8em;
+  gap: 1em;
   align-items: center;
-  justify-content: center;
-}
-.acc-radar svg{ width: 100%; max-width: 260px; height: auto; }
-
-.acc-score .total-lbl{
-  font-size: 0.7em;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.2em;
-  color: rgba(255,255,255,0.5);
-  margin-bottom: 0.25em;
-}
-.acc-score .total-val{
-  font-size: 2.2em;
-  font-weight: 700;
-  color: #fff;
-  line-height: 1;
-  margin-bottom: 0.15em;
-}
-.acc-score .total-of{
-  font-size: 0.85em;
-  color: rgba(255,255,255,0.5);
-  margin-bottom: 1em;
-}
-.acc-score .rule-list{
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  font-size: 0.82em;
-}
-.acc-score .rule-list li{
-  display: flex;
-  justify-content: space-between;
-  padding: 0.35em 0;
+  padding: 0.6em 0;
   border-top: 1px solid rgba(255,255,255,0.1);
+  font-size: 0.85em;
 }
-.acc-score .rule-list li:first-child{ border-top: 0; }
-.acc-score .rule-list .rule-val{ color: var(--accent-hover, #f98780); font-weight: 700; }
+.acc-bar-row:first-child{ border-top: 0; }
+.acc-bar-lbl b{ display: block; color: #fff; }
+.acc-bar-lbl span{ color: rgba(255,255,255,0.6); font-size: 0.9em; }
+.acc-bar-track{ height: 0.7em; border-radius: 0.35em; background: rgba(255,255,255,0.12); overflow: hidden; }
+.acc-bar-track span{ display: block; height: 100%; border-radius: 0.35em; }
+.acc-bar-cls{ font-weight: 700; text-align: right; }
+.acc-bar-total{ margin-top: 0.4em; font-size: 0.85em; color: rgba(255,255,255,0.6); text-align: right; }
+.acc-bar-total b{ color: #fff; font-size: 1.2em; }
+@media (max-width: 640px){
+  .acc-bar-row{ grid-template-columns: 1fr; gap: 0.4em; }
+  .acc-bar-cls{ text-align: left; }
+}
 
-.acc-avg-note{
-  padding: 0 1.25em 1.25em;
-  font-size: 0.82em;
-  color: rgba(255,255,255,0.55);
-}
-.acc-avg-note strong{ color: #fff; }
+/* city-level compliance strip */
+.acc-compl{ margin-top: 1.25em; }
+.acc-compl-head{ font-size: 0.85em; font-weight: 700; color: var(--heading); margin-bottom: 0.6em; }
+.acc-compl-head span{ font-weight: 400; color: var(--text); }
+.acc-compl-bar{ display: flex; height: 2.2em; border-radius: 0.35em; overflow: hidden; }
+.acc-compl-bar span{ display: block; min-width: 3px; }
+.acc-compl-lbl{ display: flex; flex-wrap: wrap; gap: 0.4em 1.6em; font-size: 0.8em; color: var(--text); margin-top: 0.7em; }
+.acc-compl-lbl span{ display: inline-flex; align-items: center; gap: 0.5em; }
+.acc-compl-lbl i{ width: 0.9em; height: 0.9em; border-radius: 0.2em; border: 1px solid rgba(0,0,0,0.15); }
+.acc-compl-lbl b{ color: var(--heading); }
