@@ -129,24 +129,18 @@
   margin: 0;
   display: grid;
   grid-template-columns: repeat(6, 1fr);
-  gap: 1.5em;
+  gap: 2.5em 2em;
 }
-/* 3 cards on the top row, 2 centred below */
+/* 3 items on the top row, 2 centred below — no boxes, just icon + text */
 .svc-strengths li{
   grid-column: span 2;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: 1em;
-  padding: 2em 1.5em;
-  background: #fff;
-  border: 1px solid var(--rule);
-  border-radius: 0.6em;
-  box-shadow: 0 1px 2px rgba(47,51,59,0.04);
-  transition: box-shadow 0.2s, transform 0.2s;
+  gap: 1.1em;
+  padding: 0 0.5em;
 }
-.svc-strengths li:hover{ box-shadow: 0 6px 18px rgba(47,51,59,0.1); transform: translateY(-2px); }
 .svc-strengths li:nth-child(4){ grid-column: 2 / span 2; }
 .svc-strengths li:nth-child(5){ grid-column: 4 / span 2; }
 .svc-strengths .pico{
@@ -154,16 +148,13 @@
   width: 5em;
   height: 5em;
   border-radius: 100%;
-  background: var(--dark);
-  color: #fff;
+  background: transparent;
+  border: 2px solid var(--accent);
+  color: var(--accent);
   display: flex;
   align-items: center;
   justify-content: center;
 }
-/* The site's universal reset (main.css) sets `font: inherit` on every
-   element, including <i> — that wipes the Font Awesome font-family a
-   bare <i class="fas fa-x"> depends on, leaving the glyph blank. The
-   site's own .icon:before rule works around this the same way. */
 .svc-strengths .pico i{
   font-family: 'Font Awesome 5 Free';
   font-weight: 900;
