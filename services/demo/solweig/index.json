@@ -1,1 +1,12 @@
-{"cities": [{"id": "Belem", "label": "Belém, Brazil", "story": "Belem/story.json"}, {"id": "Nouakchott", "label": "Nouakchott, Mauritania", "story": "Nouakchott/story.json"}]}
+{
+ "cities": [
+  {
+   "id": "Casablanca",
+   "label": "Casablanca, Morocco — UTCI"
+  },
+  {
+   "id": "Warangal",
+   "label": "Warangal, India — WBGT"
+  }
+ ]
+}

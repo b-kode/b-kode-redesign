@@ -61,6 +61,7 @@ async function initUhiDemo(el){
            own the other 3 corners (zoom top-right, scale
            bottom-left, attribution bottom-right) on this map. -->
       <div class="uhi-overlay-stack">
+        <div class="uhi-past" data-past></div>
         <div class="uhi-time" data-time>&mdash;</div>
         <div class="uhi-stats">
           <div class="stat"><span class="lbl">City mean temperature</span><span class="val" data-citymean>&mdash;</span></div>
@@ -85,6 +86,12 @@ async function initUhiDemo(el){
   const $modeBtns = [...el.querySelectorAll('[data-mode] button')];
   const $mapEl = el.querySelector('[data-map]');
   const $time = el.querySelector('[data-time]');
+  const $past = el.querySelector('[data-past]');
+  {
+    const d = new Date(meta.forecast_issue_time_utc);
+    const when = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+    $past.innerHTML = `<b>Archived forecast</b> · issued ${when}`;
+  }
   const $cityMean = el.querySelector('[data-citymean]');
   const $slider = el.querySelector('[data-slider]');
   const $play = el.querySelector('[data-play]');

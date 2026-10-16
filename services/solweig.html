@@ -7,7 +7,7 @@
 <html>
 
 	<head>
-		<title>B-Kode — SOLWEIG 2m Thermal Comfort Heatmap</title>
+		<title>B-Kode — Thermal Comfort Maps</title>
 		<meta name="robots" content="noindex, nofollow" />
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
@@ -72,7 +72,7 @@
 									alt="2 metre UTCI thermal comfort raster over an urban street grid" />
 								<div class="svc-hero-text">
 									<span class="svc-kicker">Thermal comfort</span>
-									<h1>SOLWEIG 2m Thermal Comfort Heatmap</h1>
+									<h1>Thermal Comfort Maps</h1>
 								</div>
 							</div>
 							<p class="svc-hero-caption">Picture: zoom-in on a 2 m UTCI map &mdash; hot streets in red, shaded courtyards and greenery cool.</p>
@@ -81,8 +81,15 @@
 						<div class="svc-page">
 
 							<div class="svc-intro">
-								<p>High-resolution human thermal comfort modelling that integrates radiation, wind and
-								shading from buildings and vegetation to calculate UTCI / WBGT.</p>
+								<p>Thermal Comfort Maps translate weather into what people actually feel on the street.
+									Using the physics-based SOLWEIG model, we combine radiation, wind and the shade of buildings
+									and trees at 2&nbsp;metre resolution to calculate human thermal comfort for an entire city.</p>
+									<p>Results come in the heat-stress metric that fits your question &mdash; <strong>UTCI</strong>
+									for outdoor thermal comfort, or <strong>WBGT</strong> for occupational and health-related heat
+									risk &mdash; for typical and extreme days, today and under future climate scenarios, with the
+									urban heat island effect included. Maps can be aggregated to hexagons or neighbourhoods for
+									city-wide screening, or kept at full 2&nbsp;m detail to evaluate individual streets, squares
+									and design interventions.</p>
 							</div>
 
 							<div class="svc-block">
@@ -94,15 +101,19 @@
 									</li>
 									<li>
 										<span class="pico"><i class="fas fa-atom"></i></span>
-										<span><strong>Physics-based</strong>Uses physical modelling (SOLWEIG), not statistical inference — a scarce capability in the market.</span>
+										<span><strong>Physics-based</strong>Uses physical modelling (the SOLWEIG model), not statistical inference — a scarce capability in the market.</span>
 									</li>
 									<li>
 										<span class="pico"><i class="fas fa-wind"></i></span>
 										<span><strong>Wind effects</strong>Accounts for wind sheltering and channelling by buildings and vegetation.</span>
 									</li>
 									<li>
+										<span class="pico"><i class="fas fa-city"></i></span>
+										<span><strong>Urban Heat Island</strong>The urban heat island effect is included, so results reflect the real microclimate of the city rather than a rural weather station.</span>
+									</li>
+									<li>
 										<span class="pico"><i class="fas fa-temperature-high"></i></span>
-										<span><strong>UHI &amp; future scenarios</strong>Urban Heat Island effects and future climate scenarios are included.</span>
+										<span><strong>Future scenarios</strong>Typical and extreme days for the present climate and for future climate scenarios, to design for the heat a place will actually face.</span>
 									</li>
 								</ul>
 							</div>
@@ -117,9 +128,10 @@
 
 							<div class="svc-block">
 								<h2>Demo</h2>
-								<p>Real 2&nbsp;m UTCI rasters for two demo cities. The city map shows the
-								   typical-day heat-stress choropleth per neighbourhood — click an outlined
-								   hex to open its 2&nbsp;m SOLWEIG detail with the basemap underneath.</p>
+								<p>Real 2&nbsp;m results for the typical present-day climate, averaged over the
+									   24&nbsp;h of a typical day: mean <strong>UTCI</strong> for Casablanca and mean
+									   <strong>WBGT</strong> for Warangal. Switch between the hexagon mean and the full
+									   2&nbsp;m resolution, and zoom in to see individual streets.</p>
 							</div>
 
 						</div>
@@ -133,11 +145,17 @@
 						<div class="svc-page">
 
 							<div class="svc-block">
-								<h2>Free request</h2>
-								<p class="svc-request">
-									No free request for this product — high-resolution GPU runs are too costly to give away.
-									<a href="mailto:jonas@b-kode.be?subject=Discuss%20a%20SOLWEIG%20study">Discuss a study &rarr;</a>
+								<h2>Request a study</h2>
+								<p class="svc-req-intro">
+									High-resolution GPU runs are too costly to offer as a free demo, so every Thermal Comfort
+									study is scoped to your project. Tell us where and what you need &mdash; we come back with a proposal.
 								</p>
+								<ol class="svc-study-steps">
+									<li><strong>Scope</strong><span>Share your area, the question (UTCI or WBGT) and the scenarios of interest.</span></li>
+									<li><strong>Model</strong><span>We run SOLWEIG at 2&nbsp;m for your site, on typical and extreme days.</span></li>
+									<li><strong>Deliver</strong><span>Maps, hexagon statistics and a short report you can use in design and policy.</span></li>
+								</ol>
+								<a class="svc-req-submit svc-study-cta" href="mailto:jonas@b-kode.be?subject=Request%20a%20Thermal%20Comfort%20study">Request a study &rarr;</a>
 							</div>
 
 						</div>

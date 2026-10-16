@@ -97,7 +97,7 @@ function lineChart(series, opt){
 
   const legend = series.map((s, i) =>
     `<span class="sc-legend-item">
-       <svg width="22" height="10" viewBox="0 0 22 10"><line x1="1" y1="5" x2="21" y2="5" stroke="${s.color}" stroke-width="3" ${s.dash ? `stroke-dasharray="${s.dash}"` : ''} stroke-linecap="round"/></svg>
+       <svg width="18" height="8" viewBox="0 0 18 8"><line x1="1" y1="4" x2="17" y2="4" stroke="${s.color}" stroke-width="1.25" ${s.dash ? `stroke-dasharray="2.5 2.5"` : ''} stroke-linecap="butt"/></svg>
        <span>${s.name}</span>
      </span>`).join('');
 

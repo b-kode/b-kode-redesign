@@ -198,3 +198,26 @@
   background: var(--accent, #e97770);
   cursor: pointer;
 }
+
+/* "Archived forecast" flags: the demo is a past run, not live. */
+.uhi-past{
+  padding: 0.45em 0.9em;
+  border-radius: 0.35em;
+  background: rgba(233, 119, 112, 0.95);
+  color: #fff;
+  font-size: 0.78em;
+  align-self: flex-start;
+  letter-spacing: 0.02em;
+}
+.uhi-past-tag{
+  display: inline-block;
+  padding: 0.1em 0.6em;
+  margin-right: 0.35em;
+  border-radius: 1em;
+  background: var(--accent, #e97770);
+  color: #fff;
+  font-size: 0.8em;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}

@@ -206,3 +206,9 @@
   font-size: 0.8em;
 }
 .maplibregl-popup.sw-pop .maplibregl-popup-tip{ border-top-color: #1c1f26; }
+
+.sw-note{
+  margin: 0.75em 0 0;
+  font-size: 0.8em;
+  color: var(--text, #717479);
+}
