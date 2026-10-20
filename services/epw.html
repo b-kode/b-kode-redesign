@@ -136,8 +136,7 @@
 							<div class="svc-block">
 								<h2>Request an EPW file</h2>
 								<p class="svc-req-intro">
-									Historical and future files are <strong>free</strong> during the demo phase.
-									Pick a <strong>city</strong> from the GHSL list (CMIP6, SSP2-4.5 for future files).
+									Pick a <strong>city</strong> from the GHSL list for historical and future (CMIP6) files.
 									For historical files only, you can also choose a custom location on a map.
 								</p>
 
@@ -197,7 +196,6 @@
 
 											<div class="svc-req-col svc-req-col--free">
 												<div class="svc-req-col-head">
-													<span class="svc-req-badge svc-req-badge--free">Free</span>
 													<h3>Historical EPW</h3>
 												</div>
 												<p class="svc-req-col-sub">Derived from ERA5-Land reanalysis and local WMO stations (up to 2024).</p>
@@ -224,10 +222,9 @@
 
 											<div class="svc-req-col svc-req-col--free">
 												<div class="svc-req-col-head">
-													<span class="svc-req-badge svc-req-badge--free">Free</span>
 													<h3>Future EPW</h3>
 												</div>
-												<p class="svc-req-col-sub">CMIP6 projections for the chosen city, scenario SSP2-4.5.</p>
+												<p class="svc-req-col-sub">CMIP6 projections for the chosen city, by global warming level or emissions scenario.</p>
 
 												<div class="svc-req-check-list">
 													<label class="svc-req-check"><input type="checkbox" name="fut" value="TMY" data-fut><span class="svc-req-check-box"></span> TMY &mdash; Typical Meteorological Year</label>
@@ -236,21 +233,44 @@
 													<label class="svc-req-check"><input type="checkbox" name="fut" value="XDSY" data-fut><span class="svc-req-check-box"></span> XDSY &mdash; extreme DSY</label>
 												</div>
 
-												<div data-fut-sub hidden>
+												<p class="svc-req-hint" data-fut-locked hidden>Future files are only available for cities in the list &mdash; untick &ldquo;custom location&rdquo; to request them.</p>
+
+												<div data-fut-sub>
 													<div class="svc-field svc-req-sub">
-														<label for="reqSsp">SSP scenario</label>
-														<select id="reqSsp" disabled>
-															<option value="ssp245" selected>SSP2-4.5</option>
+														<label for="reqFutMode">Scenario type</label>
+														<select id="reqFutMode">
+															<option value="gwl" selected>Global warming level (GWL)</option>
+															<option value="ssp">Emissions scenario (SSP)</option>
 														</select>
 													</div>
-													<div class="svc-field svc-req-sub">
-														<label class="svc-req-range-label">Future period</label>
-														<div class="svc-req-range-row">
-															<select id="reqFutStart"></select>
-															<span>&ndash;</span>
-															<select id="reqFutEnd"></select>
+													<div class="svc-field svc-req-sub" data-gwl-sub>
+														<label for="reqGwl">Global warming level</label>
+														<select id="reqGwl">
+															<option value="1.5">1.5 &deg;C</option>
+															<option value="2">2 &deg;C</option>
+															<option value="3" selected>3 &deg;C</option>
+															<option value="4">4 &deg;C</option>
+														</select>
+														<p class="svc-req-hint">Warming above the pre-industrial climate.</p>
+													</div>
+													<div data-ssp-sub hidden>
+														<div class="svc-field svc-req-sub">
+															<label for="reqSsp">SSP scenario</label>
+															<select id="reqSsp">
+																<option value="ssp245" selected>SSP2-4.5</option>
+																<option value="ssp370">SSP3-7.0</option>
+																<option value="ssp585">SSP5-8.5</option>
+															</select>
 														</div>
-														<p class="svc-req-hint">At least 10 years, between 2025 and 2099.</p>
+														<div class="svc-field svc-req-sub">
+															<label class="svc-req-range-label">Future period</label>
+															<div class="svc-req-range-row">
+																<select id="reqFutStart"></select>
+																<span>&ndash;</span>
+																<select id="reqFutEnd"></select>
+															</div>
+															<p class="svc-req-hint">At least 10 years, between 2025 and 2099.</p>
+														</div>
 													</div>
 													<div class="svc-req-sub svc-req-sub--extreme" data-xmy-sub hidden>
 														<div class="svc-field">
@@ -301,7 +321,7 @@
 									</div>
 
 									<div class="svc-req-submit-row">
-										<p class="svc-req-cost-note" data-cost-note>Historical-only request &mdash; free.</p>
+										<p class="svc-req-cost-note" data-cost-note>Historical-only request.</p>
 										<button type="submit" class="svc-req-submit">Send request &rarr;</button>
 									</div>
 								</form>

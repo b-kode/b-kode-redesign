@@ -127,7 +127,7 @@ async function initSolweigDemo(el){
   }
 
   function applyMode(){
-    if (!map || !map.isStyleLoaded()) return;
+    if (!map || !map.getLayer('px') || !map.getLayer('hex-fill')) return;
     const hex = mode === 'hex';
     map.setLayoutProperty('hex-fill', 'visibility', hex ? 'visible' : 'none');
     map.setLayoutProperty('hex-edge', 'visibility', hex ? 'visible' : 'none');
@@ -159,12 +159,18 @@ async function initSolweigDemo(el){
         type: 'raster', tileSize: 256, tiles: [root + meta.tiles],
         minzoom: meta.minzoom, maxzoom: meta.maxzoom, bounds: meta.bounds,
       });
+      // layers start in the current mode: switching city keeps the chosen
+      // view (applyMode() right after addLayer can bail while the style updates)
+      const showHex = mode === 'hex';
       map.addLayer({ id: 'px', type: 'raster', source: 'px',
+        layout: { visibility: showHex ? 'none' : 'visible' },
         paint: { 'raster-opacity': 0.9, 'raster-resampling': 'nearest' } });
       map.addSource('hexes', { type: 'geojson', data: hexGeo });
       map.addLayer({ id: 'hex-fill', type: 'fill', source: 'hexes',
+        layout: { visibility: showHex ? 'visible' : 'none' },
         paint: { 'fill-color': rampExpr(meta.range), 'fill-opacity': 0.8 } });
       map.addLayer({ id: 'hex-edge', type: 'line', source: 'hexes',
+        layout: { visibility: showHex ? 'visible' : 'none' },
         paint: { 'line-color': '#22303c', 'line-opacity': 0.35, 'line-width': 0.4 } });
 
       const pop = new maplibregl.Popup({ closeButton: false, closeOnMove: true, className: 'sw-pop' });

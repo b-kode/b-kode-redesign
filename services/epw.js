@@ -211,9 +211,9 @@ async function initEpwDemo(el){
    Field logic ported from X-GenWeather-Portal's Streamlit form
    (github.com/JonasBlancke/X-GenWeather-Portal): historical AMY/TMY
    (AMY = one specific year, TMY = a reference period) for any
-   coordinate; future TMY/DSY/XTMY/XDSY from CMIP6 for a GHSL city only,
-   SSP2-4.5 only; UHI correction needs an LCZ. Everything is free in the
-   demo phase. Submits to Formspree (see
+   coordinate; future TMY/DSY/XTMY/XDSY from CMIP6 for a GHSL city only
+   (a global warming level, default 3 °C, or SSP2-4.5 / SSP3-7.0 / SSP5-8.5);
+   UHI correction needs an LCZ. Submits to Formspree (see
    EPW_FORMSPREE_ENDPOINT below); falls back to a pre-filled mailto if
    that isn't configured.
    ============================================================ */
@@ -426,6 +426,11 @@ function initEpwRequestForm(form){
   const $customPanel = form.querySelector('[data-custom-panel]');
   const $cityField = form.querySelector('[data-city-field]');
   const $futSub = form.querySelector('[data-fut-sub]');
+  const $futCol = form.querySelector('[data-fut]').closest('.svc-req-col');
+  const $futLocked = form.querySelector('[data-fut-locked]');
+  const $futMode = form.querySelector('#reqFutMode');
+  const $gwlSub = form.querySelector('[data-gwl-sub]');
+  const $sspSub = form.querySelector('[data-ssp-sub]');
   const $amyYear = form.querySelector('#reqAmyYear');
   const $tmyStart = form.querySelector('#reqTmyStart');
   const $tmyEnd = form.querySelector('#reqTmyEnd');
@@ -456,19 +461,23 @@ function initEpwRequestForm(form){
   initYears();
 
   function syncVisibility(){
+    // A custom (map) location has no CMIP6 city behind it, so future files are
+    // switched off and locked while it is on.
+    const customOn = $custom.checked;
+    $futBoxes.forEach(b => { if (customOn) b.checked = false; b.disabled = customOn; });
+    $futCol.classList.toggle('is-disabled', customOn);
+    $futLocked.hidden = !customOn;
     const histOn = $histBoxes.some(b => b.checked);
     const futOn = $futBoxes.some(b => b.checked);
+    $gwlSub.hidden = $futMode.value !== 'gwl';
+    $sspSub.hidden = $futMode.value !== 'ssp';
     $amySub.hidden = !form.querySelector('input[value="AMY"]').checked;
     $tmySub.hidden = !form.querySelector('input[value="TMY"][data-hist]').checked;
-    $futSub.hidden = !futOn;
     $xmySub.hidden = !$xmyBoxes.some(b => b.checked);
     $lczField.hidden = !$uhi.checked;
-    // A city is the default for everything. A custom location (map) is an opt-in for
-    // historical-only requests: future files only exist for the GHSL cities.
-    const customAllowed = histOn && !futOn;
-    $customWrap.hidden = !customAllowed;
-    if (!customAllowed) $custom.checked = false;
-    const customOn = $custom.checked;
+    // A city is the default for everything. A custom location (map) is an opt-in
+    // for historical files: future files only exist for the GHSL cities.
+    $customWrap.hidden = false;
     $customPanel.hidden = !customOn;
     $cityField.hidden = customOn;
     if (customOn) locationMap.ensure();               // after un-hiding: a map needs a visible box
@@ -484,11 +493,11 @@ function initEpwRequestForm(form){
     const histOn = $histBoxes.some(b => b.checked);
     const futOn = $futBoxes.some(b => b.checked);
     if (futOn && histOn) {
-      $costNote.innerHTML = '<strong>Free</strong> — historical and future files for the chosen city (SSP2-4.5).';
+      $costNote.textContent = 'Historical and future files for the chosen city.';
     } else if (futOn) {
-      $costNote.innerHTML = 'Future request (chosen city, SSP2-4.5) — <strong>free</strong>.';
+      $costNote.textContent = 'Future request for the chosen city.';
     } else if (histOn) {
-      $costNote.innerHTML = 'Historical-only request — <strong>free</strong>.';
+      $costNote.textContent = 'Historical-only request.';
     } else {
       $costNote.textContent = 'Select at least one historical or future output.';
     }
@@ -540,7 +549,8 @@ function initEpwRequestForm(form){
     // together with that back end (an old back end only knows "(PAID)").
     lines.push('', `Future EPW (FREE): ${futSel.length ? futSel.join(', ') : 'none'}`);
     if (futSel.length) {
-      lines.push(`  Scenario: ${form.querySelector('#reqSsp').value.toUpperCase()}, period ${$futStart.value}-${$futEnd.value}`);
+      if ($futMode.value === 'gwl') lines.push(`  Scenario: GWL ${form.querySelector('#reqGwl').value} °C`);
+      else lines.push(`  Scenario: ${form.querySelector('#reqSsp').value.toUpperCase()}, period ${$futStart.value}-${$futEnd.value}`);
       if (futSel.includes('XTMY') || futSel.includes('XDSY')) {
         lines.push(`  Extreme metric: ${form.querySelector('#reqXmyMetric').value}, return period ${form.querySelector('#reqXmyReturn').value}y`);
       }
@@ -580,7 +590,7 @@ function initEpwRequestForm(form){
       }
     } else if (!city) {
       setStatus('error', 'Pick a city from the list' +
-        (futSel.length ? '.' : ' (or tick "Use a custom location" for a map).'));
+        ' (or tick "Use a custom location" for a map).');
       form.querySelector('#reqCity').focus();
       return;
     }
