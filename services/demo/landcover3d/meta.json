@@ -11,9 +11,9 @@
    ],
    "file": "1.json",
    "counts": {
-    "buildings": 316,
+    "buildings": 2069,
     "trees": 4557,
-    "landcover": 1254
+    "landcover": 2331
    }
   },
   {
@@ -27,9 +27,9 @@
    ],
    "file": "2.json",
    "counts": {
-    "buildings": 806,
+    "buildings": 2160,
     "trees": 5957,
-    "landcover": 1373
+    "landcover": 2343
    }
   },
   {
@@ -43,9 +43,9 @@
    ],
    "file": "3.json",
    "counts": {
-    "buildings": 424,
+    "buildings": 2639,
     "trees": 4278,
-    "landcover": 1587
+    "landcover": 2794
    }
   },
   {
@@ -59,9 +59,9 @@
    ],
    "file": "4.json",
    "counts": {
-    "buildings": 356,
+    "buildings": 1226,
     "trees": 2981,
-    "landcover": 1535
+    "landcover": 2413
    }
   }
  ]

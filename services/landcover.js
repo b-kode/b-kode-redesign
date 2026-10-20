@@ -195,6 +195,7 @@ async function initLandcoverDemo(el){
   let currentHoodId = null;
   let detail3dMap = null;
   let detail3dGeneration = 0;
+  let detail2dGeneration = 0;
   const detail3dCache = {}; // neighbourhood id -> cutout GeoJSON, fetched once
 
   function openDetail(id){
@@ -232,12 +233,31 @@ async function initLandcoverDemo(el){
     dm.addControl(new maplibregl.ScaleControl({ maxWidth: 90, unit: 'metric' }), 'bottom-left');
     detailMap = dm;
 
-    dm.on('load', () => {
+    // Vector land cover + building footprints (same files as the 3D view, so
+    // they are fetched once) — crisp at any zoom. Falls back to the 2 m raster
+    // if the vector data can't be loaded.
+    const generation = ++detail2dGeneration;
+    const dataP = loadDetail3d(h).catch(() => null);
+    dm.on('load', async () => {
       try { dm.setLayoutProperty('osm', 'visibility', 'visible'); } catch (e) {}
-      dm.addSource('lc', { type: 'image', url: base + h.file, coordinates: cornersFor(h.bounds) });
-      dm.addLayer({ id: 'lc', type: 'raster', source: 'lc',
-        paint: { 'raster-opacity': 0.92, 'raster-resampling': 'nearest' } });
-      dm.setLayoutProperty('lc', 'visibility', $detailLcToggle.checked ? 'visible' : 'none');
+      const data = await dataP;
+      if (generation !== detail2dGeneration) return;
+      const visibility = $detailLcToggle.checked ? 'visible' : 'none';
+      if (data && data.landcover && data.buildings) {
+        dm.addSource('lc-2d-landcover', { type: 'geojson', data: data.landcover });
+        dm.addLayer({ id: 'lc-2d-landcover', type: 'fill', source: 'lc-2d-landcover',
+          layout: { visibility },
+          paint: { 'fill-color': ['get', 'LC_COLOR'], 'fill-opacity': 0.92, 'fill-antialias': true } });
+        dm.addSource('lc-2d-buildings', { type: 'geojson', data: data.buildings });
+        dm.addLayer({ id: 'lc-2d-buildings', type: 'fill', source: 'lc-2d-buildings',
+          layout: { visibility },
+          paint: { 'fill-color': '#1e1818', 'fill-opacity': 0.95, 'fill-antialias': true } });
+      } else {
+        dm.addSource('lc', { type: 'image', url: base + h.file, coordinates: cornersFor(h.bounds) });
+        dm.addLayer({ id: 'lc', type: 'raster', source: 'lc',
+          layout: { visibility },
+          paint: { 'raster-opacity': 0.92, 'raster-resampling': 'nearest' } });
+      }
     });
   }
 
@@ -380,7 +400,9 @@ async function initLandcoverDemo(el){
   });
   $detailLcToggle.addEventListener('change', () => {
     const visibility = $detailLcToggle.checked ? 'visible' : 'none';
-    try { detailMap.setLayoutProperty('lc', 'visibility', visibility); } catch (e) {}
+    ['lc', 'lc-2d-landcover', 'lc-2d-buildings'].forEach((layerId) => {
+      try { if (detailMap.getLayer(layerId)) detailMap.setLayoutProperty(layerId, 'visibility', visibility); } catch (e) {}
+    });
     // In 3D this is the master "show the modelled scene" toggle, not
     // just the ground land-cover layer — buildings and trees go with
     // it, since turning it off is meant to leave the bare basemap.
