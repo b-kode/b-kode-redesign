@@ -7,8 +7,8 @@
    Each city carries its own metric (UTCI or WBGT) and colour range.
    ============================================================ */
 
-const RAMP = ["#ffffcc", "#ffeda0", "#fed976", "#feb24c", "#fd8d3c",
-              "#fc4e2a", "#e31a1c", "#bd0026", "#800026"];
+const RAMP = ["#313695", "#4575b4", "#74add1", "#abd9e9", "#ffffbf",
+              "#fee090", "#fdae61", "#f46d43", "#d73027"];
 
 const OSM_STYLE = {
   version: 8,
