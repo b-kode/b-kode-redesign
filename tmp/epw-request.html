@@ -1,0 +1,229 @@
+<!DOCTYPE HTML>
+<html lang="en">
+	<head>
+		<title>B-Kode — Request an EPW file</title>
+		<meta name="robots" content="noindex, nofollow" />
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<!-- Everything below resolves against services/, so the shared epw.js
+		     (which fetches demo/epw/cities.json relatively) works unchanged. -->
+		<base href="../services/" />
+		<link rel="stylesheet" href="../assets/css/main.css" />
+		<link rel="stylesheet" href="../assets/css/styles.css">
+		<link rel="stylesheet" href="epw.css">
+		<link rel="stylesheet" href="vendor/maplibre-gl.css">
+		<link rel="icon" href="../images/kode_favicon.png">
+		<style>
+			.req-only-head { display:flex; align-items:center; gap:1em; margin-bottom:1.5em; }
+			.req-only-head span { font-weight:600; letter-spacing:.05em; }
+		</style>
+	</head>
+	<body class="no-sidebar">
+		<div id="page-wrapper">
+			<div id="main" class="wrapper style2">
+				<div class="container">
+					<div class="svc-page">
+						<div class="req-only-head">
+							<span>B-Kode &middot; EnergyPlus Weather Files</span>
+						</div>
+						<div class="svc-block">
+								<h2>Request an EPW file</h2>
+								<p class="svc-req-intro">
+									Pick a <strong>city</strong> from the GHSL list for historical and future (CMIP6) files.
+									For historical files only, you can also choose a custom location on a map.
+								</p>
+
+								<form class="svc-req-form" id="epwReqForm">
+
+									<div class="svc-req-step">
+										<div class="svc-req-step-head"><span class="svc-req-step-no">1</span><h3>About you</h3></div>
+										<div class="svc-req-row">
+											<div class="svc-field">
+												<label for="reqName">Project / client name</label>
+												<input type="text" id="reqName" placeholder="e.g. MyProject_01" required>
+											</div>
+											<div class="svc-field">
+												<label for="reqEmail">Email</label>
+												<input type="email" id="reqEmail" placeholder="you@example.com" required>
+											</div>
+										</div>
+									</div>
+
+									<div class="svc-req-step">
+										<div class="svc-req-step-head"><span class="svc-req-step-no">2</span><h3>Location</h3></div>
+
+										<div class="svc-field svc-city-field" data-city-field>
+											<label for="reqCity">City (GHSL urban centre)</label>
+											<input type="text" id="reqCity" placeholder="Start typing, e.g. Ghent" autocomplete="off"
+												role="combobox" aria-expanded="false" aria-controls="reqCityList" aria-autocomplete="list">
+											<ul class="svc-city-list" id="reqCityList" role="listbox" hidden></ul>
+											<p class="svc-city-picked" data-city-picked hidden></p>
+										</div>
+
+										<label class="svc-req-check svc-req-custom" data-custom-wrap hidden>
+											<input type="checkbox" id="reqCustomLoc"><span class="svc-req-check-box"></span>
+											Use a custom location instead of a city <span class="svc-req-label-note">(historical files only)</span>
+										</label>
+
+										<div data-custom-panel hidden>
+											<div class="svc-req-map-wrap">
+												<div class="svc-req-map" id="reqLocMap"></div>
+												<p class="svc-req-map-hint">Click the map to drop a pin, or type coordinates directly below.</p>
+											</div>
+											<div class="svc-req-row">
+												<div class="svc-field">
+													<label for="reqLat">Latitude</label>
+													<input type="text" id="reqLat" placeholder="53.3442">
+												</div>
+												<div class="svc-field">
+													<label for="reqLon">Longitude</label>
+													<input type="text" id="reqLon" placeholder="-6.2265">
+												</div>
+											</div>
+										</div>
+									</div>
+
+									<div class="svc-req-step">
+										<div class="svc-req-step-head"><span class="svc-req-step-no">3</span><h3>Weather files</h3></div>
+										<div class="svc-req-cols">
+
+											<div class="svc-req-col svc-req-col--free">
+												<div class="svc-req-col-head">
+													<h3>Historical EPW</h3>
+												</div>
+												<p class="svc-req-col-sub">Derived from ERA5-Land reanalysis and local WMO stations (up to 2024).</p>
+
+												<div class="svc-req-check-list">
+													<label class="svc-req-check"><input type="checkbox" name="hist" value="AMY" data-hist><span class="svc-req-check-box"></span> AMY &mdash; Actual Meteorological Year</label>
+													<label class="svc-req-check"><input type="checkbox" name="hist" value="TMY" data-hist checked><span class="svc-req-check-box"></span> TMY &mdash; Typical Meteorological Year</label>
+												</div>
+
+												<div class="svc-field svc-req-sub" data-amy-sub hidden>
+													<label for="reqAmyYear">AMY year</label>
+													<select id="reqAmyYear"></select>
+												</div>
+												<div class="svc-req-sub" data-tmy-sub>
+													<label class="svc-req-range-label">TMY reference period</label>
+													<div class="svc-req-range-row">
+														<select id="reqTmyStart"></select>
+														<span>&ndash;</span>
+														<select id="reqTmyEnd"></select>
+													</div>
+													<p class="svc-req-hint">At least 10 and at most 45 years.</p>
+												</div>
+											</div>
+
+											<div class="svc-req-col svc-req-col--free">
+												<div class="svc-req-col-head">
+													<h3>Future EPW</h3>
+												</div>
+												<p class="svc-req-col-sub">CMIP6 projections for the chosen city, by global warming level or emissions scenario.</p>
+
+												<div class="svc-req-check-list">
+													<label class="svc-req-check"><input type="checkbox" name="fut" value="TMY" data-fut><span class="svc-req-check-box"></span> TMY &mdash; Typical Meteorological Year</label>
+													<label class="svc-req-check"><input type="checkbox" name="fut" value="DSY" data-fut><span class="svc-req-check-box"></span> DSY &mdash; Design Summer Year</label>
+													<label class="svc-req-check"><input type="checkbox" name="fut" value="XTMY" data-fut><span class="svc-req-check-box"></span> XTMY &mdash; extreme TMY</label>
+													<label class="svc-req-check"><input type="checkbox" name="fut" value="XDSY" data-fut><span class="svc-req-check-box"></span> XDSY &mdash; extreme DSY</label>
+												</div>
+
+												<p class="svc-req-hint" data-fut-locked hidden>Future files are only available for cities in the list &mdash; untick &ldquo;custom location&rdquo; to request them.</p>
+
+												<div data-fut-sub>
+													<div class="svc-field svc-req-sub">
+														<label for="reqFutMode">Scenario type</label>
+														<select id="reqFutMode">
+															<option value="gwl" selected>Global warming level (GWL)</option>
+															<option value="ssp">Emissions scenario (SSP)</option>
+														</select>
+													</div>
+													<div class="svc-field svc-req-sub" data-gwl-sub>
+														<label for="reqGwl">Global warming level</label>
+														<select id="reqGwl">
+															<option value="1.5">1.5 &deg;C</option>
+															<option value="2">2 &deg;C</option>
+															<option value="3" selected>3 &deg;C</option>
+															<option value="4">4 &deg;C</option>
+														</select>
+														<p class="svc-req-hint">Warming above the pre-industrial climate.</p>
+													</div>
+													<div data-ssp-sub hidden>
+														<div class="svc-field svc-req-sub">
+															<label for="reqSsp">SSP scenario</label>
+															<select id="reqSsp">
+																<option value="ssp245" selected>SSP2-4.5</option>
+																<option value="ssp585">SSP5-8.5</option>
+															</select>
+														</div>
+														<div class="svc-field svc-req-sub">
+															<label class="svc-req-range-label">Future period</label>
+															<div class="svc-req-range-row">
+																<select id="reqFutStart"></select>
+																<span>&ndash;</span>
+																<select id="reqFutEnd"></select>
+															</div>
+															<p class="svc-req-hint">At least 10 years, between 2025 and 2099.</p>
+														</div>
+													</div>
+													<div class="svc-req-sub svc-req-sub--extreme" data-xmy-sub hidden>
+														<div class="svc-field">
+															<label for="reqXmyMetric">Extreme metric</label>
+															<select id="reqXmyMetric">
+																<option>TX7d</option><option>TX5d</option><option>TX3d</option>
+																<option>EHF</option>
+															</select>
+														</div>
+														<div class="svc-field">
+															<label for="reqXmyReturn">Return period (years)</label>
+															<input type="number" id="reqXmyReturn" value="10" min="1">
+														</div>
+													</div>
+												</div>
+											</div>
+
+										</div>
+									</div>
+
+									<div class="svc-req-step">
+										<div class="svc-req-step-head"><span class="svc-req-step-no">4</span><h3>Options</h3></div>
+										<div class="svc-req-row">
+											<label class="svc-req-check svc-req-uhi">
+												<input type="checkbox" id="reqUhi" checked><span class="svc-req-check-box"></span>
+												Apply Urban Heat Island correction (Local Climate Zone &times; UWG)
+											</label>
+										</div>
+										<div class="svc-req-row" data-lcz-field>
+											<div class="svc-field">
+												<label for="reqLcz">Local Climate Zone of the site</label>
+												<select id="reqLcz">
+													<option value="1">1 &mdash; Compact high-rise</option>
+													<option value="2">2 &mdash; Compact mid-rise</option>
+													<option value="3" selected>3 &mdash; Compact low-rise</option>
+													<option value="4">4 &mdash; Open high-rise</option>
+													<option value="5">5 &mdash; Open mid-rise</option>
+													<option value="6">6 &mdash; Open low-rise</option>
+													<option value="8">8 &mdash; Large low-rise</option>
+													<option value="9">9 &mdash; Sparsely built</option>
+												</select>
+											</div>
+										</div>
+										<div class="svc-field">
+											<label for="reqNotes">Notes / special requests</label>
+											<textarea id="reqNotes" rows="3" placeholder="Anything else we should know?"></textarea>
+										</div>
+									</div>
+
+									<div class="svc-req-submit-row">
+										<p class="svc-req-cost-note" data-cost-note>Historical-only request.</p>
+										<button type="submit" class="svc-req-submit">Send request &rarr;</button>
+									</div>
+								</form>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<script src="https://kit.fontawesome.com/bdcf1cb699.js" crossorigin="anonymous"></script>
+		<script src="vendor/maplibre-gl.js"></script>
+		<script src="epw.js"></script>
+	</body>
+</html>
