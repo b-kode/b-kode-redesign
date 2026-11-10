@@ -212,7 +212,7 @@ async function initEpwDemo(el){
    (github.com/JonasBlancke/X-GenWeather-Portal): historical AMY/TMY
    (AMY = one specific year, TMY = a reference period) for any
    coordinate; future TMY/DSY/XTMY/XDSY from CMIP6 for a GHSL city only
-   (a global warming level, default 3 °C, or SSP2-4.5 / SSP3-7.0 / SSP5-8.5);
+   (a global warming level, default 3 °C, or SSP2-4.5 / SSP5-8.5);
    UHI correction needs an LCZ. Submits to Formspree (see
    EPW_FORMSPREE_ENDPOINT below); falls back to a pre-filled mailto if
    that isn't configured.
