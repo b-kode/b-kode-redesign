@@ -499,6 +499,9 @@
 
 .svc-req-uhi{ font-size: 0.9em; font-weight: 600; }
 
+/* Cloudflare Turnstile bot check (cloud route only, added by epw.js) */
+.svc-req-turnstile{ margin-top: 1em; min-height: 65px; }
+
 .svc-req-submit-row{
   display: flex;
   align-items: center;

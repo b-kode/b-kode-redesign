@@ -213,14 +213,22 @@ async function initEpwDemo(el){
    (AMY = one specific year, TMY = a reference period) for any
    coordinate; future TMY/DSY/XTMY/XDSY from CMIP6 for a GHSL city only
    (a global warming level, default 3 °C, or SSP2-4.5 / SSP5-8.5);
-   UHI correction needs an LCZ. Submits to Formspree (see
-   EPW_FORMSPREE_ENDPOINT below); falls back to a pre-filled mailto if
-   that isn't configured.
+   UHI correction needs an LCZ. Submits to the B-Kode intake service
+   (cloud route, default) when EPW_INTAKE_URL and EPW_TURNSTILE_SITEKEY
+   are set; otherwise to Formspree (see EPW_FORMSPREE_ENDPOINT below),
+   and to a pre-filled mailto if that isn't configured either.
    ============================================================ */
 // Formspree endpoint for the EPW request form (form id myknozkr,
 // https://formspree.io/forms/myknozkr/overview) — submissions POST here
 // and land in the inbox configured on that Formspree form.
 const EPW_FORMSPREE_ENDPOINT = 'https://formspree.io/f/myknozkr';
+// Cloud route: the intake service (MinorityReport pipelines/free_requests/
+// intake_service.py on Cloud Run) checks the request and starts it right away;
+// the requester gets the files by e-mail. Both values are public. Leave either
+// one empty to send requests to Formspree instead.
+const EPW_INTAKE_URL = '';          // https://epw-intake-….europe-west4.run.app/request
+const EPW_TURNSTILE_SITEKEY = '';   // Cloudflare Turnstile site key (bot check)
+const EPW_USE_CLOUD = Boolean(EPW_INTAKE_URL && EPW_TURNSTILE_SITEKEY);
 
 /* Pick-a-point map for the optional "custom location" (historical files
    only). It is created the first time the panel is shown (a map inside a
@@ -517,6 +525,52 @@ function initEpwRequestForm(form){
     $submitRow.after($formStatus);
   }
 
+  // Cloud route only: the Turnstile widget sits above the submit button; it
+  // adds a hidden "cf-turnstile-response" input with the token to the form.
+  let $turnstile = null;
+  if (EPW_USE_CLOUD) {
+    $turnstile = document.createElement('div');
+    $turnstile.className = 'cf-turnstile svc-req-turnstile';
+    $turnstile.dataset.sitekey = EPW_TURNSTILE_SITEKEY;
+    $submitRow.before($turnstile);
+    const s = document.createElement('script');
+    s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
+    s.async = true;
+    s.defer = true;
+    document.head.appendChild(s);
+  }
+  const turnstileToken = () => {
+    const i = form.querySelector('[name="cf-turnstile-response"]');
+    return i ? i.value : '';
+  };
+  const resetTurnstile = () => {             // a token is single-use
+    if ($turnstile && window.turnstile) window.turnstile.reset($turnstile);
+  };
+
+  // The structured request the intake service validates (same fields as
+  // validator.validate_request in MinorityReport).
+  function buildCloudPayload(sel){
+    const p = { name: sel.name, email: sel.email, notes: sel.notes,
+                lat: sel.lat, lon: sel.lon, hist: sel.histSel, fut: sel.futSel,
+                uhi: $uhi.checked, turnstileToken: turnstileToken() };
+    if (sel.histSel.includes('AMY')) p.amyYear = $amyYear.value;
+    if (sel.histSel.includes('TMY')) { p.tmyStart = $tmyStart.value; p.tmyEnd = $tmyEnd.value; }
+    if ($uhi.checked) p.lcz = form.querySelector('#reqLcz').value;
+    if (sel.futSel.length) {
+      p.cityId = sel.city ? sel.city.id : null;
+      if ($futMode.value === 'gwl') p.gwl = form.querySelector('#reqGwl').value;
+      else {
+        p.ssp = [form.querySelector('#reqSsp').value];
+        p.futStart = $futStart.value; p.futEnd = $futEnd.value;
+      }
+      if (sel.futSel.includes('XTMY') || sel.futSel.includes('XDSY')) {
+        p.xmyMetric = form.querySelector('#reqXmyMetric').value;
+        p.xmyReturn = form.querySelector('#reqXmyReturn').value;
+      }
+    }
+    return p;
+  }
+
   function buildRequestLines(){
     const name = form.querySelector('#reqName').value.trim();
     const email = form.querySelector('#reqEmail').value.trim();
@@ -575,7 +629,8 @@ function initEpwRequestForm(form){
 
   form.addEventListener('submit', async e => {
     e.preventDefault();
-    const { name, email, lines, histSel, futSel, city, customOn, lat, lon } = buildRequestLines();
+    const sel = buildRequestLines();
+    const { name, email, lines, histSel, futSel, city, customOn, lat, lon } = sel;
 
     if (!histSel.length && !futSel.length) {
       setStatus('error', 'Select at least one historical or future output.');
@@ -602,9 +657,14 @@ function initEpwRequestForm(form){
       return;
     }
 
+    if (EPW_USE_CLOUD && !turnstileToken()) {
+      setStatus('error', 'Please wait for the security check above the button to finish, then send again.');
+      return;
+    }
+
     // No Formspree endpoint configured yet — fall back to the mailto:
     // draft-opener so the form still does SOMETHING useful meanwhile.
-    if (!EPW_FORMSPREE_ENDPOINT) {
+    if (!EPW_USE_CLOUD && !EPW_FORMSPREE_ENDPOINT) {
       const subject = encodeURIComponent(`EPW request — ${name || 'unnamed project'}`);
       const body = encodeURIComponent(lines.join('\n'));
       window.location.href = `mailto:jonas@b-kode.be?subject=${subject}&body=${body}`;
@@ -625,11 +685,21 @@ function initEpwRequestForm(form){
     };
 
     try {
-      const res = await fetch(EPW_FORMSPREE_ENDPOINT, {
+      const res = await fetch(EPW_USE_CLOUD ? EPW_INTAKE_URL : EPW_FORMSPREE_ENDPOINT, {
         method: 'POST',
         headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(EPW_USE_CLOUD ? buildCloudPayload(sel) : payload),
       });
+      if (EPW_USE_CLOUD && (res.status === 400 || res.status === 429 || res.status === 403)) {
+        // the intake service explains what to change (invalid field, daily limit, failed bot check)
+        const answer = await res.json().catch(() => ({}));
+        const details = Array.isArray(answer.details) ? ': ' + answer.details.join('; ') : '';
+        resetTurnstile();
+        $submitBtn.disabled = false;
+        $submitBtn.textContent = 'Send request →';
+        setStatus('error', (answer.error || 'The request was not accepted') + details + '.');
+        return;
+      }
       if (!res.ok) throw new Error('request failed');
       // The confirmation lives OUTSIDE the form: the in-form status element is hidden together
       // with the form, which used to leave the user with an empty page after a successful send.
@@ -638,8 +708,10 @@ function initEpwRequestForm(form){
       const $thanks = document.createElement('p');
       $thanks.className = 'svc-req-status svc-req-status--ok';
       $thanks.setAttribute('data-form-thanks', '');
-      $thanks.append(
-        `Thanks${name ? ', ' + name : ''} — your EPW request has been sent. We'll follow up at ${email || 'the email you provided'} shortly. `);
+      $thanks.append(EPW_USE_CLOUD
+        ? `Thanks${name ? ', ' + name : ''} — your request is being processed. The weather files will be sent to ${email}, `
+          + `usually within ${futSel.length ? 'an hour' : '15 minutes'}. Please also check your spam folder. `
+        : `Thanks${name ? ', ' + name : ''} — your EPW request has been sent. We'll follow up at ${email || 'the email you provided'} shortly. `);
       const again = document.createElement('button');
       again.type = 'button';
       again.className = 'svc-req-again';
@@ -651,6 +723,7 @@ function initEpwRequestForm(form){
         syncVisibility();
         form.hidden = false;
         $formStatus.hidden = true;
+        resetTurnstile();
         $submitBtn.disabled = false;
         $submitBtn.textContent = 'Send request →';
         form.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -659,6 +732,7 @@ function initEpwRequestForm(form){
       form.after($thanks);
       $thanks.scrollIntoView({ behavior: 'smooth', block: 'center' });
     } catch (err) {
+      resetTurnstile();
       $submitBtn.disabled = false;
       $submitBtn.textContent = 'Send request →';
       setStatus('error', `Something went wrong sending the request — email us directly instead: `);
