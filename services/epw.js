@@ -227,7 +227,7 @@ const EPW_FORMSPREE_ENDPOINT = 'https://formspree.io/f/myknozkr';
 // the requester gets the files by e-mail. Both values are public. Leave either
 // one empty to send requests to Formspree instead.
 const EPW_INTAKE_URL = '';          // https://epw-intake-….europe-west4.run.app/request
-const EPW_TURNSTILE_SITEKEY = '';   // Cloudflare Turnstile site key (bot check)
+const EPW_TURNSTILE_SITEKEY = '0x4AAAAAAGV4JQpM8fwNUxqf';   // Cloudflare Turnstile site key (bot check)
 const EPW_USE_CLOUD = Boolean(EPW_INTAKE_URL && EPW_TURNSTILE_SITEKEY);
 
 /* Pick-a-point map for the optional "custom location" (historical files
